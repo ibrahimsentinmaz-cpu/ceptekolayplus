@@ -1,0 +1,9 @@
+# .gitignore için ekleme
+# Deployment için gereken dosyalar
+
+# Setup scriptlerini dahil et
+!setup.bat
+!setup.sh
+
+# Example dosyalarını dahil et  
+!.env.example

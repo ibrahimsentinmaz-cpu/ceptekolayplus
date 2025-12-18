@@ -1,0 +1,99 @@
+export type Role = 'ADMIN' | 'SALES_REP';
+
+export interface User {
+  email: string;
+  name: string;
+  role: Role;
+}
+
+export type LeadStatus =
+  | 'Yeni'
+  | 'Aranacak'
+  | 'Ulaşılamadı'
+  | 'Meşgul/Hattı kapalı'
+  | 'Yanlış numara'
+  | 'Daha sonra aranmak istiyor'
+  | 'WhatsApp’tan bilgi istiyor'
+  | 'E-Devlet paylaşmak istemedi'
+  | 'Başvuru alındı'
+  | 'Eksik evrak bekleniyor'
+  | 'Onaya gönderildi'
+  | 'Satış yapıldı/Tamamlandı'
+  | 'Reddetti'
+  | 'Uygun değil'
+  | 'İptal/Vazgeçti'
+  | 'Mağazaya davet edildi'
+  | 'Kefil bekleniyor'
+  | 'Teslim edildi';
+
+export interface Customer {
+  id: string;
+  created_at: string;
+  created_by: string;
+  ad_soyad: string;
+  telefon: string;
+  tc_kimlik?: string;
+  dogum_tarihi?: string;
+  sehir?: string;
+  meslek_is?: string;
+  mulkiyet_durumu?: string;
+  durum: LeadStatus;
+  sahip?: string; // Email of the sales rep
+  cekilme_zamani?: string;
+  son_arama_zamani?: string;
+  sonraki_arama_zamani?: string;
+  arama_not_kisa?: string;
+  aciklama_uzun?: string;
+  e_devlet_sifre?: string;
+  ikametgah_varmi?: 'Evet' | 'Hayır';
+  hizmet_dokumu_varmi?: 'Evet' | 'Hayır';
+  ayni_isyerinde_sure_ay?: string;
+  son_yatan_maas?: string;
+  dava_dosyasi_varmi?: 'Evet' | 'Hayır';
+  acik_icra_varmi?: 'Evet' | 'Hayır';
+  kapali_icra_varmi?: 'Evet' | 'Hayır';
+  kapali_icra_kapanis_sekli?: string;
+  gizli_dosya_varmi?: 'Evet' | 'Hayır';
+  arac_varmi?: 'Evet' | 'Hayır';
+  tapu_varmi?: 'Evet' | 'Hayır';
+  avukat_sorgu_durumu?: string;
+  avukat_sorgu_sonuc?: string;
+  gorsel_1_url?: string;
+  gorsel_2_url?: string;
+  updated_at?: string;
+  updated_by?: string;
+  kilitli_mi?: boolean; // stored as "TRUE"/"FALSE" in sheets
+  kilit_sahibi?: string;
+  kilit_zamani?: string;
+
+  // Approval workflow fields
+  onay_durumu?: 'Beklemede' | 'Onaylandı' | 'Reddedildi' | 'Kefil İstendi';
+  kredi_limiti?: string;
+  admin_notu?: string;
+  onay_tarihi?: string;
+  onaylayan_admin?: string;
+
+  // Delivery tracking fields
+  urun_seri_no?: string;
+  urun_imei?: string;
+  teslim_tarihi?: string;
+  teslim_eden?: string;
+
+  // New detail fields
+  arac_detay?: string;
+  tapu_detay?: string;
+  dava_detay?: string;
+  gizli_dosya_detay?: string;
+  acik_icra_detay?: string;
+}
+
+export interface LogEntry {
+  log_id: string;
+  timestamp: string;
+  user_email: string;
+  customer_id: string;
+  action: 'PULL_LEAD' | 'UPDATE_STATUS' | 'UPDATE_FIELDS' | 'UPLOAD_IMAGE_1' | 'UPLOAD_IMAGE_2' | 'SET_NEXT_CALL';
+  old_value?: string;
+  new_value?: string;
+  note?: string;
+}
