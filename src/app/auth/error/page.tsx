@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 function ErrorContent() {
     const searchParams = useSearchParams();
     const email = searchParams.get('email');
+    const error = searchParams.get('error');
 
     let message = 'Bir hata oluştu.';
 
