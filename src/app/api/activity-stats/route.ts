@@ -201,6 +201,8 @@ function getEmptyStats() {
         peakHour: 0,
         upcomingBirthdays: 0,
         streak: 0,
+        hoursSinceLastCall: 0,
+        activityLevel: 0,
     };
 }
 

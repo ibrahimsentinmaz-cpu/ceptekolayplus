@@ -352,5 +352,6 @@ function generateMessages(stats: ActivityStats): Message[] {
         });
     }
 
+    console.log('Generated messages:', messages.length);
     return messages;
 }
