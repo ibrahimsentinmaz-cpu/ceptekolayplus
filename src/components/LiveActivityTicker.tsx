@@ -295,7 +295,29 @@ function generateMessages(stats: ActivityStats): Message[] {
             type: 'success',
             text: formatMessage(getRandomMessage('streaks'), { days: stats.streak }),
             emoji: '🔥',
-            showConfetti: stats.streak >= 7 // Confetti for 7-day streak
+            showConfetti: stats.streak >= 7
+        });
+    }
+
+    // 💧 WELLNESS REMINDERS (20% chance)
+    if (Math.random() < 0.2) {
+        const wellness = ['healthReminders', 'postureReminders', 'eyeReminders', 'breakReminders', 'foodReminders'] as const;
+        const cat = wellness[Math.floor(Math.random() * wellness.length)];
+        messages.push({
+            id: 'wellness',
+            type: 'warning',
+            text: getRandomMessage(cat),
+            emoji: cat === 'healthReminders' ? '💧' : cat === 'postureReminders' ? '🪑' : cat === 'eyeReminders' ? '👀' : cat === 'breakReminders' ? '☕' : '🍎'
+        });
+    }
+
+    // 😏 TEASING (15% chance if active)
+    if (stats.todayCalls > 10 && Math.random() < 0.15) {
+        messages.push({
+            id: 'teasing',
+            type: 'fun',
+            text: getRandomMessage(stats.todayCalls > 30 ? 'talkingTooMuch' : 'playfulTeasing'),
+            emoji: '😏'
         });
     }
 

@@ -186,6 +186,69 @@ export const ACTIVITY_MESSAGES = {
         "⚡ HIZLI İPUCU: WhatsApp'tan gelen daha hızlı dönüyor! 📱",
         "🧠 AKIL: Öğle arası daha sessiz, fırsat! 🌮",
     ],
+
+    // 💧 SAĞLIK & WELLNESS HATIRLAT​MALARI  
+    healthReminders: [
+        "💧 SU İÇ! Son 2 saattir içmedin galiba? 🚰",
+        "☕ Kahve molası zamanı! Ama suyu unutma! 💦",
+        "🥤 Hidrasyon önemli! Bir bardak su iç! 💙",
+        "🚰 Su içme vakti! Telefon değil, bardak tut! 😄",
+        "💧 2 litre hedefine ulaştın mı bugün? 🎯",
+    ],
+
+    // 🧘 ERGONOMİ & POSTÜR
+    postureReminders: [
+        "🪑 DİK OTUR! Kambur olma, patron değilsin! 😅",
+        "🧘 Postürüne dikkat! Sırtın teşekkür edecek! 💪",
+        "🪑 Otur düzgün! Sandalye sana kızıyor! 😤",
+        "🧍 Ayağa kalk, 2 adım at! Robotlaşma! 🤖",
+        "🦴 Sırtını dik tut! Krallara yakışır! 👑",
+    ],
+
+    // 👀 GÖZ SAĞLIĞI
+    eyeReminders: [
+        "👀 EKRANA BÖYLE BAKMA! 20 saniye uzağa bak! 🌳",
+        "😵 Gözlerin yoruldu! Pencereden dışarı bak! 🪟",
+        "👁️ Göz egzersizi zamanı! Uzağa odaklan! 🔭",
+        "🤓 Gözlerini kırp 10 kere! Kurumasın! 💦",
+        "👀 20-20-20 kuralı: 20 dk sonra, 20 sn uzağa bak! 📏",
+    ],
+
+    // 🗣️ KONUŞMA SATAŞMALARI
+    talkingTooMuch: [
+        "📞 ÇOK KONUŞTUN! Biraz sessizlik tadını çıkar! 🤫",
+        "🗣️ Bugün yeter konuşma! Kulaklar dinlensin! 🎧",
+        "☎️ Telefon senden gizlenmeye başladı! Fazla aramışsın! 😂",
+        "📱 Telekomünikasyon rekorları kırılıyor! Ara ver! 🏆",
+        "🎤 Radyo programı mı yapıyorsun? Duruşalım! 📻",
+    ],
+
+    // 😴 DİNLENME
+    breakReminders: [
+        "😴 MOLA VER! Süper kahraman bile dinlenir! 🦸",
+        "🌸 5 dakikalık mola! Derin bir nefes al! 🧘",
+        "☕ Kahve/Çay molası zamanı! Hak ettin! ☕",
+        "🚶 Biraz yürü! Bacaklar uyuşmuştur! 🦵",
+        "😌 Gözlerini kapat 30 saniye! Şarj ol! 🔋",
+    ],
+
+    // 🍔 BESLENME
+    foodReminders: [
+        "🍎 MEYVE YE! Şeker krizine girme! 🍌",
+        "🥗 Öğle yemeğini atladın mı? Miden konuşuyor! 🗣️",
+        "🥤 Soda yerine su iç! Daha iyi hissedersin! 💧",
+        "🍫 Çikolata değil su! Hangisi daha iyi? 😊",
+        "🥜 Sağlıklı atıştır! Cips değil kuruyemiş! 🌰",
+    ],
+
+    // 🎭 ŞAKACI SATAŞMALAR
+    playfulTeasing: [
+        "😏 Bugün kaç kez 'Alo' dedin? Sayıyoruz! 📊",
+        "🎯 Hedefin %50'si... Yarım kalmış pilav gibi! 🍚",
+        "🐢 Yavaş mısın bugün? Kaplumbağa mı oldun? 🐌",
+        "🔥 Ateş topusun! Ama söndürme su iç! 💧",
+        "👻 Hayalet gibisin! Ara verdin sanırım? 😅",
+    ],
 };
 
 // Mesaj seçme fonksiyonu
