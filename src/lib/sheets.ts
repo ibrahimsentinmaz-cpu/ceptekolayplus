@@ -304,8 +304,16 @@ export async function getLeadStats() {
     let waiting_guarantor = 0;
     let delivered = 0;
 
+    // Status counts for all statuses
+    const statusCounts: Record<string, number> = {};
+
     rows.forEach(row => {
         const c = rowToCustomer(row);
+
+        // Increment status count
+        if (c.durum) {
+            statusCounts[c.durum] = (statusCounts[c.durum] || 0) + 1;
+        }
 
         // General Status Counts
         // Fix for "Pending Approval" logic:
@@ -358,7 +366,8 @@ export async function getLeadStats() {
         waiting_retry,
         pending_approval,
         waiting_guarantor,
-        delivered
+        delivered,
+        statusCounts // NEW: All status counts
     };
 }
 

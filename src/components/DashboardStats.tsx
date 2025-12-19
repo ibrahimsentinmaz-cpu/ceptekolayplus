@@ -51,6 +51,7 @@ export function DashboardStats() {
     const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [loadingCustomers, setLoadingCustomers] = useState(false);
     const [showAllStatuses, setShowAll] = useState(false);
+    const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
 
     const fetchStats = async () => {
         setLoading(true);
@@ -59,6 +60,7 @@ export function DashboardStats() {
             if (res.ok) {
                 const data = await res.json();
                 setStats(data);
+                setStatusCounts(data.statusCounts || {}); // NEW
             }
         } catch (error) {
             console.error('Failed to fetch stats', error);
@@ -244,9 +246,14 @@ export function DashboardStats() {
                                 className={`${status.bgColor} rounded-lg p-3 border border-gray-100 hover:shadow-md transition-all cursor-pointer text-left ${expandedStatus === status.status ? 'ring-2 ring-indigo-500' : ''
                                     }`}
                             >
-                                <div className="flex items-center gap-2">
-                                    <status.icon className={`w-4 h-4 ${status.textColor}`} />
-                                    <span className="text-sm font-medium text-gray-700 truncate">{status.label}</span>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <status.icon className={`w-4 h-4 ${status.textColor}`} />
+                                        <span className="text-sm font-medium text-gray-700 truncate">{status.label}</span>
+                                    </div>
+                                    <span className={`text-sm font-bold ${status.textColor}`}>
+                                        ({statusCounts[status.status] || 0})
+                                    </span>
                                 </div>
                             </button>
                         ))}
