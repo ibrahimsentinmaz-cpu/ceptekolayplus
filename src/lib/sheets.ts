@@ -5,7 +5,7 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 // Column Mapping Helper (0-indexed)
 // Matches the exact order in the prompt
-const COLUMNS = [
+export const COLUMNS = [
     'id', 'created_at', 'created_by', 'ad_soyad', 'telefon', 'tc_kimlik', 'dogum_tarihi', 'sehir', 'meslek_is', 'mulkiyet_durumu',
     'durum', 'sahip', 'cekilme_zamani', 'son_arama_zamani', 'sonraki_arama_zamani', 'arama_not_kisa', 'aciklama_uzun',
     'e_devlet_sifre', 'ikametgah_varmi', 'hizmet_dokumu_varmi', 'ayni_isyerinde_sure_ay', 'son_yatan_maas',
@@ -14,13 +14,22 @@ const COLUMNS = [
     'gorsel_1_url', 'gorsel_2_url',
     'updated_at', 'updated_by',
     'kilitli_mi', 'kilit_sahibi', 'kilit_zamani',
-    // Approval workflow fields
+    // Approval workflow
+    'notlar',
+    'talep_edilen_urun',
+    'talep_edilen_tutar',
     'onay_durumu', 'kredi_limiti', 'admin_notu', 'onay_tarihi', 'onaylayan_admin',
     // Delivery tracking
     // Delivery tracking
     'urun_seri_no', 'urun_imei', 'teslim_tarihi', 'teslim_eden',
     // New details
-    'arac_detay', 'tapu_detay', 'dava_detay', 'gizli_dosya_detay', 'acik_icra_detay'
+    'arac_detay', 'tapu_detay', 'dava_detay', 'gizli_dosya_detay', 'acik_icra_detay',
+    // Guarantor (Kefil)
+    'kefil_ad_soyad', 'kefil_telefon', 'kefil_tc_kimlik', 'kefil_meslek_is', 'kefil_son_yatan_maas',
+    'kefil_ayni_isyerinde_sure_ay', 'kefil_e_devlet_sifre', 'kefil_ikametgah_varmi', 'kefil_hizmet_dokumu_varmi',
+    'kefil_dava_dosyasi_varmi', 'kefil_dava_detay', 'kefil_acik_icra_varmi', 'kefil_acik_icra_detay',
+    'kefil_kapali_icra_varmi', 'kefil_kapali_icra_kapanis_sekli', 'kefil_mulkiyet_durumu',
+    'kefil_arac_varmi', 'kefil_tapu_varmi', 'kefil_notlar'
 ];
 
 const COL_INDEX = COLUMNS.reduce((acc, col, idx) => ({ ...acc, [col]: idx }), {} as Record<string, number>);

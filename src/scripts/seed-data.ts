@@ -1,119 +1,108 @@
+
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 import dotenv from 'dotenv';
+import { COLUMNS } from '../lib/sheets';
+
+// Load env vars
 dotenv.config({ path: '.env.local' });
-import { getSheetsClient } from '@/lib/google';
-import { Customer } from '@/lib/types';
-import { randomUUID } from 'crypto';
 
-async function seedData() {
-    const client = getSheetsClient();
-    const sheetId = process.env.GOOGLE_SHEET_ID;
-
-    console.log('Test verileri hazırlanıyor...');
-
-    const now = new Date();
-    const pastHour = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-    const futureHour = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-
-    // Mapping based on columns in sheets.ts
-    // 'id', 'created_at', 'created_by', 'ad_soyad', 'telefon', ... 'durum' ... 'sonraki_arama_zamani'
-
-    // Helper to create row array matching columns
-    const createRow = (d: Partial<Customer>) => {
-        const fullData: Customer = {
-            id: randomUUID(),
-            created_at: new Date().toISOString(),
-            created_by: 'seed-script',
-            ad_soyad: 'Test User',
-            telefon: '5550000000',
-            durum: 'Yeni',
-            ...d
-        } as Customer;
-
-        // Same order as sheets.ts COLUMNS
-        return [
-            fullData.id, fullData.created_at, fullData.created_by, fullData.ad_soyad, fullData.telefon,
-            fullData.tc_kimlik || '', fullData.dogum_tarihi || '', fullData.sehir || 'İstanbul',
-            fullData.meslek_is || '', fullData.mulkiyet_durumu || '',
-            fullData.durum,
-            fullData.sahip || '',
-            fullData.cekilme_zamani || '',
-            fullData.son_arama_zamani || '',
-            fullData.sonraki_arama_zamani || '',
-            fullData.arama_not_kisa || '',
-            fullData.aciklama_uzun || '',
-            // ... lots of empty fields, let's keep it simple and just map keys if possible or hardcode small set
-            // The sheet expects 38 columns. Let's fill basics.
-        ];
-    };
-
-    // We need 38 columns to avoid shifting issues if we use append with specific logic
-    // But append usually just adds to the next available row. 
-    // Let's rely on the fact that we just need the first ~11 columns for basic display + status logic.
-
-    const samples = [
-        // 1. Acil (Randevusu gelmiş)
-        {
-            ad_soyad: 'Ahmet Acil (Randevulu)',
-            telefon: '5321000001',
-            durum: 'Sonra Aranacak',
-            sonraki_arama_zamani: pastHour // Should be top priority
-        },
-        // 2. Yeni 1
-        {
-            ad_soyad: 'Mehmet Yeni (Sıcak)',
-            telefon: '5321000002',
-            durum: 'Yeni'
-        },
-        // 3. Tekrar Dene (2 gün önce aranmış)
-        {
-            ad_soyad: 'Ayşe Tekrar (Ulaşılamadı)',
-            telefon: '5321000003',
-            durum: 'Ulaşılamadı',
-            son_arama_zamani: yesterday
-        },
-        // 4. Yeni 2
-        {
-            ad_soyad: 'Fatma Yeni (Soğuk)',
-            telefon: '5321000004',
-            durum: 'Yeni'
-        },
-        // 5. Henüz vakti gelmemiş randevu (Gözükmemeli veya en son)
-        {
-            ad_soyad: 'Ali İleri Tarih',
-            telefon: '5321000005',
-            durum: 'Sonra Aranacak',
-            sonraki_arama_zamani: futureHour
-        }
-    ];
-
-    const values = samples.map(s => {
-        // Construct array with correct index for critical fields
-        // 0:id, 3:name, 4:phone, 10:status, 13:last_call, 14:next_call
-        const row = new Array(38).fill('');
-        row[0] = randomUUID();
-        row[1] = new Date().toISOString();
-        row[2] = 'SYSTEM';
-        row[3] = s.ad_soyad;
-        row[4] = s.telefon;
-        row[7] = 'Ankara';
-        row[10] = s.durum;
-        if (s.son_arama_zamani) row[13] = s.son_arama_zamani;
-        if (s.sonraki_arama_zamani) row[14] = s.sonraki_arama_zamani;
-        return row;
-    });
-
-    try {
-        await client.spreadsheets.values.append({
-            spreadsheetId: sheetId,
-            range: 'Customers!A:AL',
-            valueInputOption: 'USER_ENTERED',
-            requestBody: { values }
-        });
-        console.log('✅ 5 adet test müşterisi eklendi.');
-    } catch (e: any) {
-        console.error('Hata:', e.message);
-    }
+if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
+    console.error('Missing env vars');
+    process.exit(1);
 }
 
-seedData();
+const serviceAccountAuth = new JWT({
+    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
+
+const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
+
+const CITIES = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana'];
+const JOBS = ['Mühendis', 'Öğretmen', 'Esnaf', 'Memur', 'Diğer', 'Doktor', 'Hemşire'];
+const PRODUCTS = ['iPhone 15 Pro', 'Samsung S24', 'MacBook Air', 'iPad Pro', 'Dyson V15'];
+const STATUSES = ['Yeni', 'Ulaşılamadı', 'Aranacak', 'Onaya gönderildi', 'Teslim edildi', 'Reddetti', 'Kefil bekleniyor'];
+const APPROVALS = ['Beklemede', 'Onaylandı', 'Reddedildi', 'Kefil İstendi'];
+
+function getRandomItem(arr: any[]) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomDate(start: Date, end: Date) {
+    return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString();
+}
+
+async function seed() {
+    console.log('Connecting to Google Sheets...');
+    await doc.loadInfo();
+    const sheet = doc.sheetsByTitle['Customers'];
+
+    if (!sheet) {
+        console.error('Customers sheet not found');
+        return;
+    }
+
+    console.log('Generating dummy data...');
+    const rows = [];
+
+    for (let i = 0; i < 20; i++) {
+        const city = getRandomItem(CITIES);
+        const job = getRandomItem(JOBS);
+        const status = getRandomItem(STATUSES);
+        const product = getRandomItem(PRODUCTS);
+        const amount = Math.floor(Math.random() * 50000) + 10000;
+        const approval = getRandomItem(APPROVALS);
+
+        // Logic to make data realistic
+        let approvalStatus = approval;
+        if (status === 'Teslim edildi') approvalStatus = 'Onaylandı';
+        if (status === 'Reddetti') approvalStatus = 'Reddedildi';
+
+        const rowData: Record<string, any> = {
+            id: crypto.randomUUID(),
+            created_at: randomDate(new Date(2024, 0, 1), new Date()),
+            ad_soyad: `Test User ${i + 1}`,
+            telefon: `555${Math.floor(Math.random() * 10000000)}`,
+            sehir: city,
+            meslek_is: job,
+            son_yatan_maas: (Math.floor(Math.random() * 40000) + 17000).toString(),
+            durum: status,
+            talep_edilen_urun: product,
+            talep_edilen_tutar: amount.toString(),
+            onay_durumu: approvalStatus,
+            kredi_limiti: approvalStatus === 'Onaylandı' ? (amount + 5000).toString() : '',
+            // Guarantor logic
+            kefil_ad_soyad: approvalStatus === 'Kefil İstendi' ? 'Kefil Ali' : '',
+        };
+
+        // Map to column array based on strictly ordered COLUMNS
+        // But GoogleSpreadsheet addRows accepts objects if headers are set? 
+        // No, we should use the array format to match our manual logic or just use object with header row support.
+        // Let's use array to be safe given our app logic relies on indices mostly.
+
+        // Actually doc.addRows with raw objects works if headers match.
+        // Let's verify headers.
+
+        rows.push(rowData);
+    }
+
+    // Using addRows with objects matching header values
+    // We need to make sure headers in sheet match keys. 
+    // They are Turkish/mixed in our COLUMNS definition.
+    // Our COLUMNS array keys ARE the headers we expect.
+
+    console.log(`Adding ${rows.length} rows...`);
+    // await sheet.addRows(rows); // This assumes headers are set in row 1 matching keys
+
+    // Safer to just append raw values using our helper logic
+    const rawRows = rows.map(r => {
+        return COLUMNS.map(col => r[col] || '');
+    });
+
+    await sheet.addRows(rawRows);
+    console.log('Seed complete! Check reports page.');
+}
+
+seed().catch(console.error);

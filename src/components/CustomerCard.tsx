@@ -72,6 +72,16 @@ export function CustomerCard({ initialData, onSave }: CustomerCardProps) {
             return;
         }
 
+        // Guarantor Validation
+        // Only enforce if the sales rep is re-submitting for approval ('Başvuru alındı') or submitting for approval ('Onaya gönderildi')
+        if (data.onay_durumu === 'Kefil İstendi' && (data.durum === 'Başvuru alındı' || data.durum === 'Onaya gönderildi')) {
+            if (!data.kefil_ad_soyad || !data.kefil_telefon || !data.kefil_tc_kimlik) {
+                setError('Kefil İstendiği ve onay süreci için; Kefil Ad Soyad, Telefon ve TC Kimlik zorunludur.');
+                setLoading(false);
+                return;
+            }
+        }
+
         try {
             // Auto-fill delivery tracking if marking as delivered
             const updateData = { ...data };
@@ -211,6 +221,26 @@ export function CustomerCard({ initialData, onSave }: CustomerCardProps) {
                                     placeholder="Örn: Müsait değil, yarın aranacak"
                                 />
                             </div>
+                        </div>
+                    </section>
+
+                    {/* Talep Edilen Ürün */}
+                    <section>
+                        <h3 className="text-sm font-semibold text-gray-900 bg-gray-50 p-2 rounded mb-3">🛍️ Talep Bilgileri (Yeni)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="Talep Edilen Ürün"
+                                value={data.talep_edilen_urun || ''}
+                                onChange={(e) => handleChange('talep_edilen_urun', e.target.value)}
+                                placeholder="Örn: iPhone 15 Pro 128GB"
+                            />
+                            <Input
+                                label="Talep Edilen Tutar (TL)"
+                                type="number"
+                                value={data.talep_edilen_tutar || ''}
+                                onChange={(e) => handleChange('talep_edilen_tutar', Number(e.target.value))}
+                                placeholder="Örn: 50000"
+                            />
                         </div>
                     </section>
 
@@ -400,6 +430,88 @@ export function CustomerCard({ initialData, onSave }: CustomerCardProps) {
                                 value={data.avukat_sorgu_sonuc || ''}
                                 onChange={(e) => handleChange('avukat_sorgu_sonuc', e.target.value)}
                                 placeholder="Örn: Riskli bir durum görünmüyor"
+                            />
+                        </div>
+                    </section>
+
+                    {/* Kefil Bilgileri (Yeni Phase 3) */}
+                    <section className="bg-orange-50/50 p-4 rounded-lg border border-orange-100 mt-4">
+                        <h3 className="text-sm font-semibold text-orange-900 mb-3 flex items-center gap-2">
+                            🤝 Kefil Bilgileri (Gerekiyorsa)
+                            {data.onay_durumu === 'Kefil İstendi' && (
+                                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold">Zorunlu!</span>
+                            )}
+                        </h3>
+
+                        {/* Temel Kefil Bilgileri */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <Input
+                                label="Kefil Ad Soyad"
+                                value={data.kefil_ad_soyad || ''}
+                                onChange={(e) => handleChange('kefil_ad_soyad', e.target.value)}
+                            />
+                            <Input
+                                label="Kefil Telefon"
+                                value={data.kefil_telefon || ''}
+                                onChange={(e) => handleChange('kefil_telefon', e.target.value)}
+                            />
+                            <Input
+                                label="Kefil TC Kimlik"
+                                value={data.kefil_tc_kimlik || ''}
+                                onChange={(e) => handleChange('kefil_tc_kimlik', e.target.value)}
+                                maxLength={11}
+                            />
+                            <Input
+                                label="Kefil E-Devlet Şifre"
+                                value={data.kefil_e_devlet_sifre || ''}
+                                onChange={(e) => handleChange('kefil_e_devlet_sifre', e.target.value)}
+                            />
+                        </div>
+
+                        {/* Kefil İş & Gelir */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <Input
+                                label="Kefil Meslek"
+                                value={data.kefil_meslek_is || ''}
+                                onChange={(e) => handleChange('kefil_meslek_is', e.target.value)}
+                            />
+                            <Input
+                                label="Kefil Maaş"
+                                value={data.kefil_son_yatan_maas || ''}
+                                onChange={(e) => handleChange('kefil_son_yatan_maas', e.target.value)}
+                            />
+                            <Input
+                                label="Kefil Çalışma Süresi (Ay)"
+                                value={data.kefil_ayni_isyerinde_sure_ay || ''}
+                                onChange={(e) => handleChange('kefil_ayni_isyerinde_sure_ay', e.target.value)}
+                            />
+                        </div>
+
+                        {/* Kefil Yasal Durum */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <Select
+                                label="Kefil İkametgah?"
+                                value={data.kefil_ikametgah_varmi || ''}
+                                onChange={(e) => handleChange('kefil_ikametgah_varmi', e.target.value)}
+                                options={YES_NO_OPTIONS}
+                            />
+                            <Select
+                                label="Kefil Hizmet Dökümü?"
+                                value={data.kefil_hizmet_dokumu_varmi || ''}
+                                onChange={(e) => handleChange('kefil_hizmet_dokumu_varmi', e.target.value)}
+                                options={YES_NO_OPTIONS}
+                            />
+                            <Select
+                                label="Kefil İcra Var mı?"
+                                value={data.kefil_acik_icra_varmi || ''}
+                                onChange={(e) => handleChange('kefil_acik_icra_varmi', e.target.value)}
+                                options={YES_NO_OPTIONS}
+                            />
+                            <Select
+                                label="Kefil Tapu/Araç?"
+                                value={data.kefil_tapu_varmi || ''}
+                                onChange={(e) => handleChange('kefil_tapu_varmi', e.target.value)}
+                                options={YES_NO_OPTIONS}
                             />
                         </div>
                     </section>

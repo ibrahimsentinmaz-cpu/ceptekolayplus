@@ -65,6 +65,29 @@ export interface Customer {
   kilitli_mi?: boolean; // stored as "TRUE"/"FALSE" in sheets
   kilit_sahibi?: string;
   kilit_zamani?: string;
+  talep_edilen_urun?: string;
+  talep_edilen_tutar?: number;
+
+  // Guarantor (Kefil) Fields
+  kefil_ad_soyad?: string;
+  kefil_telefon?: string;
+  kefil_tc_kimlik?: string;
+  kefil_meslek_is?: string;
+  kefil_son_yatan_maas?: string; // string mainly for input flexibility, convert to number for stats
+  kefil_ayni_isyerinde_sure_ay?: string;
+  kefil_e_devlet_sifre?: string;
+  kefil_ikametgah_varmi?: string; // Evet/Hayır
+  kefil_hizmet_dokumu_varmi?: string; // Evet/Hayır
+  kefil_dava_dosyasi_varmi?: string;
+  kefil_dava_detay?: string;
+  kefil_acik_icra_varmi?: string;
+  kefil_acik_icra_detay?: string;
+  kefil_kapali_icra_varmi?: string;
+  kefil_kapali_icra_kapanis_sekli?: string;
+  kefil_mulkiyet_durumu?: string;
+  kefil_arac_varmi?: string;
+  kefil_tapu_varmi?: string;
+  kefil_notlar?: string;
 
   // Approval workflow fields
   onay_durumu?: 'Beklemede' | 'Onaylandı' | 'Reddedildi' | 'Kefil İstendi';
