@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
         // We just blindly update for now to ensure consistency
 
         await client.spreadsheets.values.update({
-            spreadsheetId: sheetId,
+            spreadsheetId: sheetId!,
             range: 'Customers!A1:ZZ1', // Row 1 is headers
             valueInputOption: 'USER_ENTERED',
             requestBody: {
-                values: [COLUMNS] // 2D array: [[id, created_at, ...]]
+                values: [COLUMNS as any] // Cast to avoid const tuple type issue
             }
         });
 

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSheetsClient } from '@/lib/google';
 import { COLUMNS } from '@/lib/sheets';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export const dynamic = 'force-dynamic';
 
-// Helper to get day string YYYY-MM-DD
+// Helper to get day string YYYY-MM-DD in Turkey timezone
 function getDayKey(dateStr?: string) {
     if (!dateStr) return 'Unknown';
     try {
-        return new Date(dateStr).toISOString().split('T')[0];
+        return formatInTimeZone(new Date(dateStr), 'Europe/Istanbul', 'yyyy-MM-dd');
     } catch {
         return 'Invalid Date';
     }
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
             if (index > -1) return row[index];
 
             // Fallback
-            const fallbackIndex = COLUMNS.indexOf(name);
+            const fallbackIndex = COLUMNS.indexOf(name as any);
             return fallbackIndex > -1 ? row[fallbackIndex] : undefined;
         };
 
@@ -70,8 +71,8 @@ export async function GET(req: NextRequest) {
             todayCalled: 0 // NEW: Count of customers called today
         };
 
-        // Get today's date string
-        const today = new Date().toISOString().split('T')[0];
+        // Get today's date string in Turkey timezone
+        const today = formatInTimeZone(new Date(), 'Europe/Istanbul', 'yyyy-MM-dd');
 
         rows.forEach(row => {
             stats.funnel.total++;
@@ -86,7 +87,7 @@ export async function GET(req: NextRequest) {
             const createdAt = getColSafe(row, 'created_at');
             const lastCalled = getColSafe(row, 'son_arama_zamani'); // NEW
 
-            // Count today's calls
+            // Count today's calls (timezone-aware)
             if (lastCalled) {
                 const callDay = getDayKey(lastCalled);
                 if (callDay === today) {

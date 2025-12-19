@@ -11,11 +11,11 @@ export async function POST(req: NextRequest) {
 
         // 1. Sync Headers first
         await client.spreadsheets.values.update({
-            spreadsheetId: sheetId,
+            spreadsheetId: sheetId!,
             range: 'Customers!A1',
             valueInputOption: 'USER_ENTERED',
             requestBody: {
-                values: [COLUMNS]
+                values: [COLUMNS as any] // Cast to avoid const tuple type issue
             }
         });
 

@@ -180,17 +180,23 @@ export default function ReportsPage() {
 
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-500">En Çok İstenen</p>
-                            <h3 className="text-lg font-bold text-gray-900 mt-1 truncate max-w-[150px]">
-                                {productData[0]?.name || '-'}
+                            <h3
+                                className="text-lg font-bold text-gray-900 mt-1 truncate"
+                                title={productData[0]?.name || 'Henüz talep edilen ürün yok'}
+                            >
+                                {productData[0]?.name || 'Veri Yok'}
                             </h3>
                         </div>
-                        <div className="p-2 bg-purple-50 rounded-lg">
+                        <div className="p-2 bg-purple-50 rounded-lg flex-shrink-0">
                             <ShoppingBag className="w-5 h-5 text-purple-600" />
                         </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">{productData[0]?.count || 0} adet talep</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                        {productData[0]?.count || 0} adet talep
+                        {productData.length > 1 && ` (+${productData.length - 1} daha fazla)`}
+                    </p>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

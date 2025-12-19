@@ -4,40 +4,42 @@ import { Customer, LeadStatus, LogEntry } from './types';
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 // Column Mapping Helper (0-indexed)
-// Matches the exact order in the prompt
+// CRITICAL: This order MUST match Google Sheets column order exactly
 export const COLUMNS = [
+    // Core Identity & Contact (0-9)
     'id', 'created_at', 'created_by', 'ad_soyad', 'telefon', 'tc_kimlik', 'dogum_tarihi', 'sehir', 'meslek_is', 'mulkiyet_durumu',
+    // Status & Tracking (10-16)
     'durum', 'sahip', 'cekilme_zamani', 'son_arama_zamani', 'sonraki_arama_zamani', 'arama_not_kisa', 'aciklama_uzun',
+    // Documents & Employment (17-21)
     'e_devlet_sifre', 'ikametgah_varmi', 'hizmet_dokumu_varmi', 'ayni_isyerinde_sure_ay', 'son_yatan_maas',
+    // Legal & Assets (22-30)
     'dava_dosyasi_varmi', 'acik_icra_varmi', 'kapali_icra_varmi', 'kapali_icra_kapanis_sekli', 'gizli_dosya_varmi',
     'arac_varmi', 'tapu_varmi', 'avukat_sorgu_durumu', 'avukat_sorgu_sonuc',
+    // Media (31-32)
     'gorsel_1_url', 'gorsel_2_url',
+    // System Metadata (33-35)
     'updated_at', 'updated_by',
+    // Lock System (36-38)
     'kilitli_mi', 'kilit_sahibi', 'kilit_zamani',
-    // Approval workflow
-    'notlar',
-    'notlar',
-    'basvuru_kanali',
-    'talep_edilen_urun',
-    'talep_edilen_tutar',
+    // Application & Approval (39-46)
+    'basvuru_kanali', 'talep_edilen_urun', 'talep_edilen_tutar',
     'onay_durumu', 'kredi_limiti', 'admin_notu', 'onay_tarihi', 'onaylayan_admin',
-    // Delivery tracking
-    // Delivery tracking
+    // Delivery Tracking (47-50)
     'urun_seri_no', 'urun_imei', 'teslim_tarihi', 'teslim_eden',
-    // New details
+    // Detail Fields (51-55)
     'arac_detay', 'tapu_detay', 'dava_detay', 'gizli_dosya_detay', 'acik_icra_detay',
-    // Guarantor (Kefil)
+    // Guarantor (Kefil) (56-68)
     'kefil_ad_soyad', 'kefil_telefon', 'kefil_tc_kimlik', 'kefil_meslek_is', 'kefil_son_yatan_maas',
     'kefil_ayni_isyerinde_sure_ay', 'kefil_e_devlet_sifre', 'kefil_ikametgah_varmi', 'kefil_hizmet_dokumu_varmi',
     'kefil_dava_dosyasi_varmi', 'kefil_dava_detay', 'kefil_acik_icra_varmi', 'kefil_acik_icra_detay',
     'kefil_kapali_icra_varmi', 'kefil_kapali_icra_kapanis_sekli', 'kefil_mulkiyet_durumu',
     'kefil_arac_varmi', 'kefil_tapu_varmi', 'kefil_notlar',
-    // Winner customer number (added at end)
+    // Additional Fields (69-71)
     'winner_musteri_no',
-    // Psikoteknik (added at very end)
     'psikoteknik_varmi',
     'psikoteknik_notu'
-];
+] as const;
+// Total: 72 columns
 
 const COL_INDEX = COLUMNS.reduce((acc, col, idx) => ({ ...acc, [col]: idx }), {} as Record<string, number>);
 
