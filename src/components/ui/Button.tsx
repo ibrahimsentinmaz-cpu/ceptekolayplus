@@ -8,7 +8,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+    variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost';
     size?: 'sm' | 'md' | 'lg';
     isLoading?: boolean;
 }
@@ -28,7 +28,8 @@ export const Button: FC<ButtonProps> = ({
         primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
         secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500',
         danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-        outline: 'border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50'
+        outline: 'border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50',
+        ghost: 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100'
     };
 
     const sizes = {
