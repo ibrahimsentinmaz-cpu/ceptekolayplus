@@ -218,30 +218,7 @@ export default function ReportsPage() {
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                {/* Daily Trend (New) */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-indigo-600" />
-                        Günlük Başvuru Trendi (Son 30 Gün)
-                    </h3>
-                    <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={dailyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <RechartsTooltip />
-                                <Area type="monotone" dataKey="count" stroke="#4F46E5" fillOpacity={1} fill="url(#colorCount)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+
 
                 {/* Sales Funnel */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

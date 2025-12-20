@@ -6,10 +6,22 @@ import { formatInTimeZone } from 'date-fns-tz';
 export const dynamic = 'force-dynamic';
 
 // Helper to get day string YYYY-MM-DD in Turkey timezone
+// Helper to get day string YYYY-MM-DD in Turkey timezone
 function getDayKey(dateStr?: string) {
     if (!dateStr) return 'Unknown';
     try {
-        return formatInTimeZone(new Date(dateStr), 'Europe/Istanbul', 'yyyy-MM-dd');
+        let date = new Date(dateStr);
+        // Handle DD.MM.YYYY
+        if (isNaN(date.getTime()) && dateStr.includes('.')) {
+            const parts = dateStr.split('.');
+            if (parts.length === 3) {
+                // assume dd.mm.yyyy
+                date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            }
+        }
+        if (isNaN(date.getTime())) return 'Invalid Date';
+
+        return formatInTimeZone(date, 'Europe/Istanbul', 'yyyy-MM-dd');
     } catch {
         return 'Invalid Date';
     }
