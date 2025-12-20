@@ -19,19 +19,25 @@ export async function GET(req: NextRequest) {
         // Fetch all leads with "Başvuru alındı" status
         const leads = await getLeads({ durum: 'Başvuru alındı' });
 
+        // Filter out those that are already decided (processed)
+        // We only want to show leads where onay_durumu is empty, 'Beklemede', or null
+        const pendingLeads = leads.filter(l =>
+            !l.onay_durumu || l.onay_durumu === 'Beklemede'
+        );
+
         // Sort by creation date (oldest first for FIFO)
-        leads.sort((a, b) => {
+        pendingLeads.sort((a, b) => {
             const dateA = new Date(a.created_at).getTime();
             const dateB = new Date(b.created_at).getTime();
             return dateA - dateB;
         });
 
-        console.log(`Found ${leads.length} pending approvals`);
-        if (leads.length > 0) {
-            console.log('First lead sample:', { id: leads[0].id, ad_soyad: leads[0].ad_soyad });
+        console.log(`Found ${pendingLeads.length} pending approvals`);
+        if (pendingLeads.length > 0) {
+            console.log('First lead sample:', { id: pendingLeads[0].id, ad_soyad: pendingLeads[0].ad_soyad });
         }
 
-        return NextResponse.json({ leads });
+        return NextResponse.json({ leads: pendingLeads });
     } catch (error: any) {
         console.error('Pending approvals fetch error:', error);
         return NextResponse.json(
