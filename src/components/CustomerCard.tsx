@@ -5,7 +5,7 @@ import { Customer, LeadStatus } from '@/lib/types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
-import { Loader2, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Info, Phone } from 'lucide-react';
 
 interface CustomerCardProps {
     initialData: Customer;
@@ -191,11 +191,25 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 value={data.ad_soyad || ''}
                                 onChange={(e) => handleChange('ad_soyad', e.target.value)}
                             />
-                            <Input
-                                label="Telefon *"
-                                value={data.telefon || ''}
-                                onChange={(e) => handleChange('telefon', e.target.value)}
-                            />
+                            <div className="flex gap-2 items-end">
+                                <div className="flex-1">
+                                    <Input
+                                        label="Telefon *"
+                                        value={data.telefon || ''}
+                                        onChange={(e) => handleChange('telefon', e.target.value)}
+                                        placeholder="05XX..."
+                                    />
+                                </div>
+                                {data.telefon && (
+                                    <a
+                                        href={`tel:${data.telefon}`}
+                                        className="mb-[2px] h-[42px] px-4 flex items-center justify-center bg-green-100 text-green-700 rounded-lg border border-green-200 hover:bg-green-200 transition-colors"
+                                        title="PC'den Ara"
+                                    >
+                                        <Phone className="w-5 h-5" />
+                                    </a>
+                                )}
+                            </div>
                             <Input
                                 label="TC Kimlik *"
                                 value={data.tc_kimlik || ''}
