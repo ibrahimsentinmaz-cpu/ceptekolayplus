@@ -162,7 +162,12 @@ export default function Dashboard() {
                             </div>
                             <CustomerCard
                                 initialData={activeLead}
-                                onSave={(updated) => setActiveLead(updated)}
+                                onSave={() => {
+                                    // Refresh stats to reflect any status changes
+                                    fetchStats();
+                                    // Return to main screen ("Müşteri Çek" screen)
+                                    setActiveLead(null);
+                                }}
                             />
                         </div>
                     )}
