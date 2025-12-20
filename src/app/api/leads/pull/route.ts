@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { lockNextLead } from '@/lib/sheets';
 import { authOptions } from '../../auth/[...nextauth]/route';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
 
