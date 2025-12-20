@@ -85,7 +85,7 @@ export async function getLeads(filters?: { sahip?: string; durum?: LeadStatus })
     const client = getSheetsClient();
     const response = await client.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `Customers!A2:${LAST_COL}1000`, // Explicit row limit: up to row 1000
+        range: `Customers!A2:${LAST_COL}5000`, // Explicit row limit: up to row 5000
     });
 
     const rows = response.data.values || [];
@@ -143,7 +143,7 @@ export async function getCustomersByStatus(status: string, user: { email: string
     const client = getSheetsClient();
     const response = await client.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `Customers!A2:${LAST_COL}1000`, // Explicit row limit
+        range: `Customers!A2:${LAST_COL}5000`, // Explicit row limit
     });
 
     const rows = response.data.values || [];
@@ -291,7 +291,7 @@ export async function getLeadStats() {
     const client = getSheetsClient();
     const response = await client.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `Customers!A2:${LAST_COL}1000`, // Explicit row limit
+        range: `Customers!A2:${LAST_COL}5000`, // Explicit row limit
     });
 
     const rows = response.data.values || [];
