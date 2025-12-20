@@ -17,24 +17,28 @@ export const COLUMNS = [
     'arac_varmi', 'tapu_varmi', 'avukat_sorgu_durumu', 'avukat_sorgu_sonuc',
     // Media (31-32)
     'gorsel_1_url', 'gorsel_2_url',
-    // System Metadata (33-35)
-    'updated_at', 'updated_by',
-    // Lock System (36-38)
+    // Filler / Reordered System Fields (33-42) to push AR to 43
+    // AH(33)..AQ(42)
     'kilitli_mi', 'kilit_sahibi', 'kilit_zamani',
-    // Application & Approval (39-46)
     'basvuru_kanali', 'talep_edilen_urun', 'talep_edilen_tutar',
-    'onay_durumu', 'kredi_limiti', 'admin_notu', 'onay_tarihi', 'onaylayan_admin',
-    // Delivery Tracking (47-50)
-    'urun_seri_no', 'urun_imei', 'teslim_tarihi', 'teslim_eden',
-    // Detail Fields (51-55)
+    'onay_tarihi', 'onaylayan_admin', 'teslim_tarihi', 'teslim_eden',
+    // User Requested Specific Mapping (43-49) (AR-AX)
+    'onay_durumu',      // AR (43)
+    'kredi_limiti',     // AS (44)
+    'admin_notu',       // AT (45)
+    'updated_at',       // AU (46) - User called 'tarih saat'
+    'updated_by',       // AV (47) - User called 'kullanıcı adı' (Modified User)
+    'urun_seri_no',     // AW (48)
+    'urun_imei',        // AX (49)
+    // Detail Fields (50-54)
     'arac_detay', 'tapu_detay', 'dava_detay', 'gizli_dosya_detay', 'acik_icra_detay',
-    // Guarantor (Kefil) (56-68)
+    // Guarantor (Kefil) (55-67)
     'kefil_ad_soyad', 'kefil_telefon', 'kefil_tc_kimlik', 'kefil_meslek_is', 'kefil_son_yatan_maas',
     'kefil_ayni_isyerinde_sure_ay', 'kefil_e_devlet_sifre', 'kefil_ikametgah_varmi', 'kefil_hizmet_dokumu_varmi',
     'kefil_dava_dosyasi_varmi', 'kefil_dava_detay', 'kefil_acik_icra_varmi', 'kefil_acik_icra_detay',
     'kefil_kapali_icra_varmi', 'kefil_kapali_icra_kapanis_sekli', 'kefil_mulkiyet_durumu',
     'kefil_arac_varmi', 'kefil_tapu_varmi', 'kefil_notlar',
-    // Additional Fields (69-71)
+    // Additional Fields (74-76) (approx)
     'winner_musteri_no',
     'psikoteknik_varmi',
     'psikoteknik_notu'

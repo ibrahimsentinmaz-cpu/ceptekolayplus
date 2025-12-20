@@ -602,6 +602,14 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                     </span>
                                 )}
                             </h3>
+
+                            {/* Admin Note Display */}
+                            {data.admin_notu && (
+                                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-100 rounded-lg">
+                                    <p className="text-xs font-bold text-yellow-800 uppercase mb-1">📝 Yönetici Notu</p>
+                                    <p className="text-sm text-yellow-900">{data.admin_notu}</p>
+                                </div>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Input
                                     label="Ürün Seri No"
