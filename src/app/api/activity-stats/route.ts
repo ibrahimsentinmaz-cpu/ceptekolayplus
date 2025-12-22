@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getSheetsClient } from '@/lib/google';
 import { COLUMNS } from '@/lib/sheets';
-import { formatInTimeZone } from 'date-fns-tz';
+// Helper using Intl for robustness
+const trFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Istanbul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +36,7 @@ export async function GET() {
             return fallbackIndex > -1 ? row[fallbackIndex] : undefined;
         };
 
-        const today = formatInTimeZone(new Date(), 'Europe/Istanbul', 'yyyy-MM-dd');
+        const today = trFormatter.format(new Date());
 
         const stats = {
             todayApprovals: 0,
@@ -67,7 +73,7 @@ export async function GET() {
             // Today's approvals
             if (onayTarihi) {
                 try {
-                    const onayDay = formatInTimeZone(new Date(onayTarihi), 'Europe/Istanbul', 'yyyy-MM-dd');
+                    const onayDay = trFormatter.format(new Date(onayTarihi));
                     if (onayDay === today && onayDurumu === 'Onaylandı') {
                         stats.todayApprovals++;
                         if (credit) {
@@ -82,7 +88,7 @@ export async function GET() {
             // Today's calls
             if (lastCalled) {
                 try {
-                    const callDay = formatInTimeZone(new Date(lastCalled), 'Europe/Istanbul', 'yyyy-MM-dd');
+                    const callDay = trFormatter.format(new Date(lastCalled));
                     if (callDay === today) {
                         stats.todayCalls++;
 

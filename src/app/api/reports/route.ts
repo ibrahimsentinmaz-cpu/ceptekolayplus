@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSheetsClient } from '@/lib/google';
 import { COLUMNS } from '@/lib/sheets';
-import { formatInTimeZone } from 'date-fns-tz';
+// Helper using Intl for robustness
+const trFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Istanbul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
 
-export const dynamic = 'force-dynamic';
-
-// Helper to get day string YYYY-MM-DD in Turkey timezone
-// Helper to get day string YYYY-MM-DD in Turkey timezone
+// Helper to get formatted date safely
 function getDayKey(dateStr?: string) {
     if (!dateStr) return 'Unknown';
     try {
@@ -21,7 +24,7 @@ function getDayKey(dateStr?: string) {
         }
         if (isNaN(date.getTime())) return 'Invalid Date';
 
-        return formatInTimeZone(date, 'Europe/Istanbul', 'yyyy-MM-dd');
+        return trFormatter.format(date);
     } catch {
         return 'Invalid Date';
     }
@@ -85,7 +88,7 @@ export async function GET(req: NextRequest) {
         };
 
         // Get today's date string in Turkey timezone
-        const today = formatInTimeZone(new Date(), 'Europe/Istanbul', 'yyyy-MM-dd');
+        const today = trFormatter.format(new Date());
 
         rows.forEach(row => {
             stats.funnel.total++;
