@@ -87,7 +87,7 @@ export default function DashboardLayout({
                                                 className={isActive('/dashboard/approvals') ? '' : 'text-gray-600 hover:text-gray-900'}
                                             >
                                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                                Onay ({stats?.pending_approval || 0})
+                                                Onay Bekleyenler ({stats?.pending_approval || 0})
                                             </Button>
                                         </Link>
 

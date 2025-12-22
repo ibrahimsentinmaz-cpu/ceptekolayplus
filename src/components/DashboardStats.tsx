@@ -157,6 +157,16 @@ export function DashboardStats({ initialStats }: { initialStats?: any }) {
             status: 'Başvuru alındı' as LeadStatus
         },
         {
+            title: 'Kefil Bekleyen',
+            count: stats.waiting_guarantor,
+            icon: UserCheck,
+            color: 'bg-amber-500',
+            textColor: 'text-amber-600',
+            bgColor: 'bg-amber-50',
+            desc: 'Kefil evrakları bekleniyor',
+            status: 'Kefil bekleniyor' as LeadStatus
+        },
+        {
             title: 'Onaylananlar',
             count: stats.approved,
             icon: CheckCircle,
