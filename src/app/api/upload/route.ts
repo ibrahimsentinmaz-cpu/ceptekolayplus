@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { uploadFileToDrive } from '@/lib/drive';
 import { logAction } from '@/lib/sheets';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request: Request) {
     const session = await getServerSession(authOptions);

@@ -3,7 +3,7 @@ import { getSheetsClient } from '@/lib/google';
 import { COLUMNS } from '@/lib/sheets';
 import { Customer } from '@/lib/types';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
