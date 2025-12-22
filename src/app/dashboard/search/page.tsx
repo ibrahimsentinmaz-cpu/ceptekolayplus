@@ -38,31 +38,36 @@ interface SearchResult {
 }
 
 export default function SearchPage() {
-    const [tc, setTc] = useState('');
+    const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<SearchResult | null>(null);
+    const [results, setResults] = useState<SearchResult[]>([]);
+    const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!tc || tc.length < 11) {
-            setError('Geçerli bir TC Kimlik No giriniz.');
+        if (!query || query.length < 2) {
+            setError('En az 2 karakter giriniz.');
             return;
         }
 
         setLoading(true);
         setError(null);
-        setResult(null);
+        setResults([]);
+        setSelectedResult(null);
         setSearched(false);
 
         try {
-            const res = await fetch(`/api/customers/search?tc=${tc}`);
+            const res = await fetch(`/api/customers/search?q=${encodeURIComponent(query)}`);
             const json = await res.json();
 
             if (json.success) {
-                if (json.found) {
-                    setResult(json.customer);
+                if (json.customers && json.customers.length > 0) {
+                    setResults(json.customers);
+                    if (json.customers.length === 1) {
+                        setSelectedResult(json.customers[0]);
+                    }
                 }
                 setSearched(true);
             } else {
@@ -91,8 +96,12 @@ export default function SearchPage() {
         return 'text-blue-600 bg-blue-50 border-blue-200';
     };
 
+    const handleBackToList = () => {
+        setSelectedResult(null);
+    };
+
     return (
-        <div className="max-w-4xl mx-auto p-4 md:p-8">
+        <div className="max-w-4xl mx-auto p-4 md:p-8 pb-32">
             <h1 className="text-2xl font-bold text-gray-800 mb-8 flex items-center gap-2">
                 <Search className="w-6 h-6 text-indigo-600" />
                 Müşteri Sorgulama
@@ -103,14 +112,13 @@ export default function SearchPage() {
                 <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 items-end">
                     <div className="flex-1 w-full">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            TC Kimlik Numarası
+                            Arama (İsim, Telefon veya TC)
                         </label>
                         <input
                             type="text"
-                            maxLength={11}
-                            value={tc}
-                            onChange={(e) => setTc(e.target.value.replace(/\D/g, ''))}
-                            placeholder="11 haneli TC no giriniz"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Ad Soyad, Telefon veya TC giriniz"
                             className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                         />
                     </div>
@@ -122,44 +130,85 @@ export default function SearchPage() {
             </div>
 
             {/* No Result State */}
-            {searched && !result && !error && (
+            {searched && results.length === 0 && !error && (
                 <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                     <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-900">Kayıt Bulunamadı</h3>
-                    <p className="text-gray-500">Bu TC numarasına ait bir başvuru sistemde kayıtlı değil.</p>
+                    <p className="text-gray-500">Aramanızla eşleşen müşteri bulunamadı.</p>
                 </div>
             )}
 
-            {/* Result Card */}
-            {result && (
+            {/* Results List */}
+            {searched && results.length > 1 && !selectedResult && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-700">{results.length} Kayıt Bulundu</h3>
+                        <span className="text-xs text-gray-500">Detay için seçiniz</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {results.map((item) => (
+                            <div
+                                key={item.id}
+                                onClick={() => setSelectedResult(item)}
+                                className="p-4 hover:bg-indigo-50 cursor-pointer transition-colors flex justify-between items-center group"
+                            >
+                                <div>
+                                    <h4 className="font-bold text-gray-900 mb-1 group-hover:text-indigo-700">{item.ad_soyad || 'İsimsiz'}</h4>
+                                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                                        <span>{item.telefon}</span>
+                                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                        <span>{item.tc_kimlik}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(item.durum)}`}>{item.durum}</span>
+                                    <span className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm">Seç &rarr;</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Detail View */}
+            {selectedResult && (
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {/* Back Button if came from list */}
+                    {results.length > 1 && (
+                        <div className="p-4 pb-0">
+                            <button onClick={handleBackToList} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
+                                &larr; Listeye Dön
+                            </button>
+                        </div>
+                    )}
+
                     {/* Header */}
                     <div className="bg-gray-50 p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <div className="flex flex-wrap items-center gap-3 mb-1">
-                                <h2 className="text-2xl font-bold text-gray-900">{result.ad_soyad}</h2>
+                                <h2 className="text-2xl font-bold text-gray-900">{selectedResult.ad_soyad}</h2>
 
                                 {/* 1. General Status */}
                                 <span className={`px-3 py-1 rounded-full text-sm font-semibold border bg-white border-gray-200 text-gray-700`}>
-                                    {result.durum}
+                                    {selectedResult.durum}
                                 </span>
 
                                 {/* 2. Admin Approval Status (If exists) */}
-                                {(result.onay_durumu) && (
-                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(result.onay_durumu)}`}>
-                                        {result.onay_durumu}
+                                {(selectedResult.onay_durumu) && (
+                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(selectedResult.onay_durumu)}`}>
+                                        {selectedResult.onay_durumu}
                                     </span>
                                 )}
                             </div>
                             <p className="text-gray-500 flex items-center gap-2">
-                                <span className="font-mono bg-gray-200 px-2 py-0.5 rounded text-xs text-gray-700">ID: {result.id.slice(0, 8)}</span>
+                                <span className="font-mono bg-gray-200 px-2 py-0.5 rounded text-xs text-gray-700">ID: {selectedResult.id.slice(0, 8)}</span>
                                 <span className="text-gray-300">|</span>
-                                <span className="text-sm">Oluşturma: {formatDate(result.created_at)}</span>
+                                <span className="text-sm">Oluşturma: {formatDate(selectedResult.created_at)}</span>
                             </p>
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-500">Son İşlem</p>
-                            <p className="font-medium text-gray-900">{formatDate(result.updated_at)}</p>
+                            <p className="font-medium text-gray-900">{formatDate(selectedResult.updated_at)}</p>
                         </div>
                     </div>
 
@@ -173,18 +222,26 @@ export default function SearchPage() {
                                 </h3>
                                 <div className="space-y-3">
                                     <div className="flex justify-between border-b border-indigo-100 pb-2">
+                                        <span className="text-gray-600">TC Kimlik</span>
+                                        <span className="font-medium text-gray-900">{selectedResult.tc_kimlik}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-indigo-100 pb-2">
+                                        <span className="text-gray-600">Telefon</span>
+                                        <span className="font-medium text-gray-900">{selectedResult.telefon}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-indigo-100 pb-2">
                                         <span className="text-gray-600">Talep Edilen Ürün</span>
-                                        <span className="font-medium text-gray-900">{result.talep_edilen_urun || '-'}</span>
+                                        <span className="font-medium text-gray-900">{selectedResult.talep_edilen_urun || '-'}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-indigo-100 pb-2">
                                         <span className="text-gray-600">Talep Tutarı</span>
                                         <span className="font-medium text-gray-900">
-                                            {result.talep_edilen_tutar ? `${result.talep_edilen_tutar.toLocaleString('tr-TR')} ₺` : '-'}
+                                            {selectedResult.talep_edilen_tutar ? `${selectedResult.talep_edilen_tutar.toLocaleString('tr-TR')} ₺` : '-'}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Kanal</span>
-                                        <span className="font-medium text-gray-900">{result.basvuru_kanali || 'Bilinmiyor'}</span>
+                                        <span className="font-medium text-gray-900">{selectedResult.basvuru_kanali || 'Bilinmiyor'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -198,12 +255,12 @@ export default function SearchPage() {
                                         <p className="text-xs text-gray-500 mb-1">İlgilenen Temsilci</p>
                                         <p className="font-medium text-gray-900 flex items-center gap-2">
                                             <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                            {result.sahip || 'Henüz atanmadı'}
+                                            {selectedResult.sahip || 'Henüz atanmadı'}
                                         </p>
                                     </div>
-                                    {(result.arama_not_kisa || result.aciklama_uzun) ? (
+                                    {(selectedResult.arama_not_kisa || selectedResult.aciklama_uzun) ? (
                                         <div className="bg-white p-3 rounded border border-gray-200 text-sm text-gray-700 italic">
-                                            "{result.arama_not_kisa || result.aciklama_uzun}"
+                                            "{selectedResult.arama_not_kisa || selectedResult.aciklama_uzun}"
                                         </div>
                                     ) : (
                                         <p className="text-sm text-gray-400 italic">Henüz not girilmemiş.</p>
@@ -222,52 +279,52 @@ export default function SearchPage() {
                                     <div className="relative">
                                         <div className="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
                                         <p className="text-xs text-gray-500">Çekilme / Aranma Zamanı</p>
-                                        <p className="font-medium text-gray-900">{formatDate(result.cekilme_zamani)}</p>
+                                        <p className="font-medium text-gray-900">{formatDate(selectedResult.cekilme_zamani)}</p>
                                     </div>
                                     <div className="relative">
-                                        <div className={`absolute -left-[21px] top-1.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${result.son_arama_zamani ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                        <div className={`absolute -left-[21px] top-1.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${selectedResult.son_arama_zamani ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                         <p className="text-xs text-gray-500">Son Başarılı Arama</p>
-                                        <p className="font-medium text-gray-900">{formatDate(result.son_arama_zamani) || 'Aranmadı'}</p>
+                                        <p className="font-medium text-gray-900">{formatDate(selectedResult.son_arama_zamani) || 'Aranmadı'}</p>
                                     </div>
-                                    {result.sonraki_arama_zamani && (
+                                    {selectedResult.sonraki_arama_zamani && (
                                         <div className="relative">
                                             <div className="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-purple-500 border-2 border-white shadow-sm"></div>
                                             <p className="text-xs text-gray-500">Planlanan Arama</p>
-                                            <p className="font-medium text-gray-900">{formatDate(result.sonraki_arama_zamani)}</p>
+                                            <p className="font-medium text-gray-900">{formatDate(selectedResult.sonraki_arama_zamani)}</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Admin Feedback Section */}
-                            {(result.onay_durumu || result.kredi_limiti) && (
-                                <div className={`p-4 rounded-lg border ${result.onay_durumu === 'Onaylandı' ? 'bg-green-50 border-green-200' :
-                                    result.onay_durumu === 'Reddedildi' ? 'bg-red-50 border-red-200' :
+                            {(selectedResult.onay_durumu || selectedResult.kredi_limiti) && (
+                                <div className={`p-4 rounded-lg border ${selectedResult.onay_durumu === 'Onaylandı' ? 'bg-green-50 border-green-200' :
+                                    selectedResult.onay_durumu === 'Reddedildi' ? 'bg-red-50 border-red-200' :
                                         'bg-yellow-50 border-yellow-200'
                                     }`}>
-                                    <h3 className={`text-sm font-bold mb-3 flex items-center gap-2 ${result.onay_durumu === 'Onaylandı' ? 'text-green-800' :
-                                        result.onay_durumu === 'Reddedildi' ? 'text-red-800' :
+                                    <h3 className={`text-sm font-bold mb-3 flex items-center gap-2 ${selectedResult.onay_durumu === 'Onaylandı' ? 'text-green-800' :
+                                        selectedResult.onay_durumu === 'Reddedildi' ? 'text-red-800' :
                                             'text-yellow-800'
                                         }`}>
-                                        {result.onay_durumu === 'Onaylandı' ? <CheckCircle className="w-4 h-4" /> :
-                                            result.onay_durumu === 'Reddedildi' ? <XCircle className="w-4 h-4" /> :
+                                        {selectedResult.onay_durumu === 'Onaylandı' ? <CheckCircle className="w-4 h-4" /> :
+                                            selectedResult.onay_durumu === 'Reddedildi' ? <XCircle className="w-4 h-4" /> :
                                                 <AlertCircle className="w-4 h-4" />}
                                         Yönetici Kararı
                                     </h3>
 
                                     <div className="space-y-2">
-                                        {result.kredi_limiti && (
+                                        {selectedResult.kredi_limiti && (
                                             <div className="flex justify-between items-center bg-white/60 p-2 rounded">
                                                 <span className="text-sm font-medium opacity-80">Onaylanan Limit</span>
-                                                <span className="text-lg font-bold">{result.kredi_limiti}</span>
+                                                <span className="text-lg font-bold">{selectedResult.kredi_limiti}</span>
                                             </div>
                                         )}
-                                        {result.admin_notu && (
+                                        {selectedResult.admin_notu && (
                                             <div className="mt-2 text-sm italic opacity-90 border-t border-black/5 pt-2">
-                                                " {result.admin_notu} "
+                                                " {selectedResult.admin_notu} "
                                             </div>
                                         )}
-                                        {result.onay_durumu === 'Kefil İstendi' && (
+                                        {selectedResult.onay_durumu === 'Kefil İstendi' && (
                                             <div className="text-xs bg-white/80 p-2 rounded text-orange-800 font-medium">
                                                 ⚠️ Bu başvuru için kefil bilgileri bekleniyor.
                                             </div>

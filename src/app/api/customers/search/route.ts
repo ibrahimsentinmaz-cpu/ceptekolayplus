@@ -7,43 +7,67 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const tc = searchParams.get('tc');
+        const query = searchParams.get('q') || searchParams.get('tc');
 
-        if (!tc) {
-            return NextResponse.json({ success: false, message: 'TC Kimlik No gereklidir.' }, { status: 400 });
+        if (!query || query.length < 2) {
+            return NextResponse.json({ success: false, message: 'En az 2 karakter giriniz.' }, { status: 400 });
         }
 
         const client = getSheetsClient();
         const sheetId = process.env.GOOGLE_SHEET_ID;
 
         // Fetch all data
+        // OPTIMIZATION: For large datasets, this might be slow. 
+        // But for <5000 rows it's okay.
         const response = await client.spreadsheets.values.get({
             spreadsheetId: sheetId,
             range: 'Customers!A2:ZZ',
         });
 
         const rows = response.data.values || [];
+        const lowerQuery = query.toLowerCase();
 
-        // Find matching customer
-        const tcIndex = COLUMNS.indexOf('tc_kimlik');
+        // Indices
+        const idxTC = COLUMNS.indexOf('tc_kimlik');
+        const idxName = COLUMNS.indexOf('ad_soyad');
+        const idxPhone = COLUMNS.indexOf('telefon');
 
-        if (tcIndex === -1) {
-            return NextResponse.json({ success: false, message: 'Veri şeması hatası: TC Sütunu bulunamadı.' }, { status: 500 });
+        // Helper to extract customer object
+        const mapRowToCustomer = (row: any[]) => {
+            const c: any = {};
+            COLUMNS.forEach((col, i) => c[col] = row[i] || null);
+            return c;
+        };
+
+        const matches = rows.filter(row => {
+            const tc = row[idxTC]?.toString() || '';
+            const name = row[idxName]?.toString().toLowerCase() || '';
+            const phone = row[idxPhone]?.toString().replace(/\D/g, '') || '';
+            const queryClean = lowerQuery.replace(/\D/g, ''); // For phone/tc checks
+
+            // 1. TC Check (Exact or partial if long enough)
+            if (tc.includes(queryClean) && queryClean.length > 5) return true;
+
+            // 2. Phone Check
+            // Check if query is numeric and matches phone
+            if (queryClean.length > 5 && phone.includes(queryClean)) return true;
+
+            // 3. Name Check
+            if (name.includes(lowerQuery)) return true;
+
+            return false;
+        }).map(mapRowToCustomer);
+
+        if (matches.length === 0) {
+            return NextResponse.json({ success: true, found: false, message: 'Kayıt bulunamadı.', customers: [] });
         }
 
-        const foundRow = rows.find(row => row[tcIndex] === tc);
-
-        if (!foundRow) {
-            return NextResponse.json({ success: true, found: false, message: 'Müşteri bulunamadı.' });
-        }
-
-        // Map row to object
-        const customer: any = {};
-        COLUMNS.forEach((col, idx) => {
-            customer[col] = foundRow[idx] || null;
+        return NextResponse.json({
+            success: true,
+            found: true,
+            count: matches.length,
+            customers: matches
         });
-
-        return NextResponse.json({ success: true, found: true, customer });
 
     } catch (error: any) {
         console.error('Search API Error:', error);
