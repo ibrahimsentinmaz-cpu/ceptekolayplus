@@ -327,7 +327,15 @@ export async function getLeadStats() {
     let delivered = 0;
 
     let today_called = 0; // NEW
-    const todayStr = formatInTimeZone(new Date(), 'Europe/Istanbul', 'yyyy-MM-dd');
+
+    // Use native Intl for robust timezone handling without external deps
+    const trFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Istanbul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    const todayStr = trFormatter.format(new Date()); // Returns yyyy-mm-dd
 
     // Status counts for all statuses
     const statusCounts: Record<string, number> = {};
