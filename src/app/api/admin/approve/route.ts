@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
         const now = new Date().toISOString();
         const updated = await updateLead({
             ...customer,
-            ...customer,
             // Update status to 'Onaylandı' so it leaves the pool
             durum: 'Onaylandı',
             onay_durumu: 'Onaylandı',
@@ -43,6 +42,9 @@ export async function POST(req: NextRequest) {
             onay_tarihi: now,
             onaylayan_admin: session.user.email
         }, session.user.email);
+
+        // Send Email Notification
+        await sendStatusEmail(updated, 'Onaylandı');
 
         // Log action
         await logAction({

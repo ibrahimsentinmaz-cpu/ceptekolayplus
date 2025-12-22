@@ -112,6 +112,7 @@ export interface Customer {
   dava_detay?: string;
   gizli_dosya_detay?: string;
   acik_icra_detay?: string;
+  email?: string;
 }
 
 export interface LogEntry {

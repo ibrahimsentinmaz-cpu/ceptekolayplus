@@ -51,10 +51,10 @@ export const COLUMNS = [
     'kefil_dava_dosyasi_varmi', 'kefil_dava_detay', 'kefil_acik_icra_varmi', 'kefil_acik_icra_detay',
     'kefil_kapali_icra_varmi', 'kefil_kapali_icra_kapanis_sekli', 'kefil_mulkiyet_durumu',
     'kefil_arac_varmi', 'kefil_tapu_varmi', 'kefil_notlar',
-    // Additional Fields (74-76) (approx)
     'winner_musteri_no',
     'psikoteknik_varmi',
-    'psikoteknik_notu'
+    'psikoteknik_notu',
+    'email'
 ] as const;
 // Total: 72 columns
 
