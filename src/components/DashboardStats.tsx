@@ -57,9 +57,9 @@ const STAT_CARDS: StatusMetric[] = [
     { label: 'Teslim Edilen', status: 'Teslim edildi', metricKey: 'delivered', icon: Package, color: 'text-emerald-600', textColor: 'text-emerald-800', bgColor: 'bg-emerald-50' },
 ];
 
-export function DashboardStats() {
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [loading, setLoading] = useState(true);
+export function DashboardStats({ initialStats }: { initialStats?: any }) {
+    const [stats, setStats] = useState<Stats | null>(initialStats || null);
+    const [loading, setLoading] = useState(!initialStats);
     const [expandedStatus, setExpandedStatus] = useState<string | null>(null);
     const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [loadingCustomers, setLoadingCustomers] = useState(false);
@@ -83,8 +83,14 @@ export function DashboardStats() {
     };
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        if (initialStats) {
+            setStats(initialStats);
+            setStatusCounts(initialStats.statusCounts || {});
+            setLoading(false);
+        } else {
+            fetchStats();
+        }
+    }, [initialStats]);
 
     const handleStatusClick = async (status: string) => {
         if (expandedStatus === status) {
