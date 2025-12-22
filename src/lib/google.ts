@@ -7,6 +7,7 @@ const SCOPES = [
 
 export const getGoogleAuth = () => {
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+        console.error('Google Credentials Missing: EMAIL or KEY not found in env');
         throw new Error('Missing Google Service Account credentials');
     }
 
