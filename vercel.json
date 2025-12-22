@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "src/app/**/*": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/pages/api/**/*": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "regions": ["fra1"]
+}
