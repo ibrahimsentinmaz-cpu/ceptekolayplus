@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         }, session.user.email);
 
         // Send Email Notification
-        await sendStatusEmail(updated, 'Onaylandı');
+        // await sendStatusEmail(updated, 'Onaylandı');
 
         // Log action
         await logAction({

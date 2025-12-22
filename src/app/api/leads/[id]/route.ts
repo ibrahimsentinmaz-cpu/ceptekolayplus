@@ -27,14 +27,16 @@ export async function PUT(
         const updated = await updateLead(body, session.user.email);
 
         // Send email if status changed
+        /* 
         if (existing && existing.durum !== updated.durum) {
             await sendStatusEmail(updated, updated.durum);
         } else if (existing && existing.onay_durumu !== updated.onay_durumu) {
-            // Handle explicit Guarantor request via status property if mapped
-            if (updated.onay_durumu === 'Kefil İstendi') {
+             // Handle explicit Guarantor request via status property if mapped
+             if (updated.onay_durumu === 'Kefil İstendi') {
                 await sendStatusEmail(updated, 'Kefil İstendi');
-            }
-        }
+             }
+        } 
+        */
 
         return NextResponse.json({ lead: updated });
     } catch (error: any) {
