@@ -63,12 +63,18 @@ export default function ReportsPage() {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)
         .map(([name, count]) => ({ name, count }));
-    const professionData = Object.entries(stats.profession || {}).map(([name, d]) => ({ name, count: d.count })).sort((a, b) => b.count - a.count).slice(0, 10);
+    // Profession - Filter out empty/invalid
+    const professionData = Object.entries(stats.profession || {})
+        .filter(([name, d]) => d.count > 0 && name && name !== 'Diğer' && name !== 'Bilinmiyor' && name.trim() !== '')
+        .map(([name, d]) => ({ name, count: d.count, income: d.avgIncome }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
     const productData = Object.entries(stats.product || {}).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-    // Sales Rate (Delivered / Approved)
-    const salesRate = stats.totalApproved > 0
-        ? ((stats.totalDelivered / stats.totalApproved) * 100).toFixed(1)
+    // Sales Rate (Delivered / Called)
+    // User Request: "Satış oranını hesaplamasını toplam arananlara göre yapalım"
+    const salesRate = stats.totalCalled > 0
+        ? ((stats.totalDelivered / stats.totalCalled) * 100).toFixed(1)
         : '0';
 
     return (
@@ -109,8 +115,8 @@ export default function ReportsPage() {
                     </div>
                 </div>
 
-                {/* 6. Sales Rate (Approved base) */}
-                <KpiCard label="Satış Oranı %" value={`%${salesRate}`} icon={TrendingUp} color="emerald" subtext="(Onaylanan)" />
+                {/* 6. Sales Rate (Delivered / Called) */}
+                <KpiCard label="Satış Oranı %" value={`%${salesRate}`} icon={TrendingUp} color="emerald" subtext="(Aranan)" />
 
                 {/* 7. Delivered */}
                 <KpiCard label="Teslim Edilen" value={stats.totalDelivered} icon={Package} color="green" />
@@ -129,6 +135,7 @@ export default function ReportsPage() {
                                 innerRadius={60} outerRadius={100}
                                 paddingAngle={2}
                                 dataKey="value"
+                                label={({ name, value, percent }) => `${name}: ${value} (%${((percent || 0) * 100).toFixed(0)})`}
                             >
                                 {statusData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -157,6 +164,7 @@ export default function ReportsPage() {
                                 innerRadius={60} outerRadius={100}
                                 paddingAngle={2}
                                 dataKey="value"
+                                label={({ name, value, percent }) => `${name}: ${value} (%${((percent || 0) * 100).toFixed(0)})`}
                             >
                                 {channelData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
