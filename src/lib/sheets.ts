@@ -160,7 +160,7 @@ export async function getCustomersByStatus(status: string, user: { email: string
     const client = getSheetsClient();
     const response = await client.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `Customers!A2:${LAST_COL}5000`, // Explicit row limit
+        range: `Customers!A2:ZZ`, // Dynamic range
     });
 
     const rows = response.data.values || [];
@@ -192,7 +192,7 @@ export async function lockNextLead(userEmail: string): Promise<Customer | null> 
     // For <1000 active leads, fetching all is fine.
     const response = await client.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `Customers!A:${LAST_COL}`,
+        range: `Customers!A:ZZ`,
     });
 
     const rows = response.data.values || [];
@@ -310,7 +310,7 @@ export async function getLeadStats() {
     const client = getSheetsClient();
     const response = await client.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `Customers!A2:${LAST_COL}5000`, // Explicit row limit
+        range: `Customers!A2:ZZ`, // Dynamic range, optimized
     });
 
     const rows = response.data.values || [];
