@@ -349,18 +349,16 @@ export async function getLeadStats() {
             // Try standard Date parse
             const date = new Date(c.son_arama_zamani);
             if (!isNaN(date.getTime())) {
-                lastCallDate = formatInTimeZone(date, 'Europe/Istanbul', 'yyyy-MM-dd');
+                lastCallDate = trFormatter.format(date);
             } else if (c.son_arama_zamani.includes('.')) {
                 // Try Parsing DD.MM.YYYY
                 const parts = c.son_arama_zamani.split('.');
                 if (parts.length === 3) {
                     // yyyy-mm-dd format for comparison
                     // Check if valid date? 
-                    // Let's rely on simple string compare if mapped correctly. 
-                    // Actually formatInTimeZone expects a Date object.
                     const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                     if (!isNaN(d.getTime())) {
-                        lastCallDate = formatInTimeZone(d, 'Europe/Istanbul', 'yyyy-MM-dd');
+                        lastCallDate = trFormatter.format(d);
                     }
                 }
             }
