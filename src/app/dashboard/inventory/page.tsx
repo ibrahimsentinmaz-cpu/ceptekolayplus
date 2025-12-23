@@ -151,8 +151,8 @@ export default function InventoryPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.durum === 'STOKTA'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-600'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {item.durum}
                                             </span>
@@ -199,6 +199,15 @@ export default function InventoryPage() {
                                     <option value="Samsung">Samsung</option>
                                     <option value="Xiaomi">Xiaomi</option>
                                     <option value="Huawei">Huawei</option>
+                                    <option value="Sony">Sony</option>
+                                    <option value="Philips">Philips</option>
+                                    <option value="Anker">Anker</option>
+                                    <option value="JBL">JBL</option>
+                                    <option value="Asus">Asus</option>
+                                    <option value="Dell">Dell</option>
+                                    <option value="Lenovo">Lenovo</option>
+                                    <option value="HP">HP</option>
+                                    <option value="Casper">Casper</option>
                                     <option value="Diğer">Diğer</option>
                                 </select>
                             </div>
