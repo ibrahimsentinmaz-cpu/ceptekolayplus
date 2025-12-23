@@ -38,12 +38,18 @@ export async function GET(req: NextRequest) {
         if (dateFilter) {
             deliveredCustomers = deliveredCustomers.filter(c => {
                 // Check 'teslim_tarihi' first, fallback to 'updated_at'
-                const dateStr = c.teslim_tarihi || c.updated_at;
-                if (!dateStr) return false;
+                const rawDate = c.teslim_tarihi || c.updated_at;
+                if (!rawDate) return false;
 
-                // Format: YYYY-MM-DD
-                // dateStr might be ISO (2024-01-01T...) or just YYYY-MM-DD
-                return dateStr.startsWith(dateFilter);
+                // Create date object
+                const d = new Date(rawDate);
+                if (isNaN(d.getTime())) return false; // Invalid date
+
+                // Convert to Turkey Time YYYY-MM-DD
+                const turkeyDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+
+                // Compare exact string match (YYYY-MM-DD)
+                return turkeyDate === dateFilter;
             });
         }
 

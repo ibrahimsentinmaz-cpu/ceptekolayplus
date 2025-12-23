@@ -155,18 +155,34 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
                         <Field label="Seçilen Ürün Seri No" value={customer.urun_seri_no || '-'} />
                     </Section>
 
-                    {/* E-Devlet İstihbarat - Grid Box */}
+                    {/* E-Devlet & Avukat İstihbarat - Grid Box */}
                     <div className="border rounded-lg p-4 bg-gray-50 print:bg-white print:border-gray-400">
                         <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2 uppercase">
                             <Shield className="w-4 h-4 text-indigo-600 print:text-black" />
-                            E-Devlet / Varlık Sorgusu
+                            Yasal & Varlık Sorgusu
                         </h3>
                         <div className="grid grid-cols-2 gap-4">
                             <BadgeField label="İcra Dosyası" value={has(customer.acik_icra_varmi) || has(customer.kapali_icra_varmi) ? 'Var' : 'Temiz'} danger={has(customer.acik_icra_varmi)} />
                             <BadgeField label="Dava Dosyası" value={has(customer.dava_dosyasi_varmi) ? 'Var' : 'Temiz'} danger={has(customer.dava_dosyasi_varmi)} />
                             <BadgeField label="Araç Kaydı" value={has(customer.arac_varmi) ? 'Var' : 'Yok'} success={has(customer.arac_varmi)} icon={Car} />
                             <BadgeField label="Tapu Kaydı" value={has(customer.tapu_varmi) ? 'Var' : 'Yok'} success={has(customer.tapu_varmi)} icon={Home} />
+
+                            {/* NEW: Lawyer Inquiry Status */}
+                            <BadgeField
+                                label="Avukat Sorgusu"
+                                value={customer.avukat_sorgu_durumu || ' yapılmadı'}
+                                success={customer.avukat_sorgu_durumu === 'Temiz'}
+                                danger={customer.avukat_sorgu_durumu === 'Riskli' || customer.avukat_sorgu_durumu === 'Olumsuz'}
+                            />
                         </div>
+
+                        {/* Lawyer Inquiry Note */}
+                        {customer.avukat_sorgu_sonuc && (
+                            <div className="mt-4 pt-3 border-t border-gray-200">
+                                <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Avukat Sorgu Notu</span>
+                                <p className="text-sm text-gray-800">{customer.avukat_sorgu_sonuc}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
