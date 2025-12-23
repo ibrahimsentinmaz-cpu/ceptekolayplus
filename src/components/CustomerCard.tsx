@@ -306,6 +306,12 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 maxLength={11}
                             />
                             <Input
+                                label="Doğum Tarihi"
+                                value={data.dogum_tarihi || ''}
+                                onChange={(e) => handleChange('dogum_tarihi', e.target.value)}
+                                placeholder="GG.AA.YYYY"
+                            />
+                            <Input
                                 label="Winner Müşteri No"
                                 value={data.winner_musteri_no || ''}
                                 onChange={(e) => handleChange('winner_musteri_no', e.target.value)}

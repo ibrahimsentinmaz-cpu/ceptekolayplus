@@ -167,27 +167,52 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
                             Yasal & Varlık Sorgusu
                         </h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <BadgeField label="İcra Dosyası" value={has(customer.acik_icra_varmi) || has(customer.kapali_icra_varmi) ? 'Var' : 'Temiz'} danger={has(customer.acik_icra_varmi)} />
+                            {/* Split Execution Badges */}
+                            <BadgeField label="Açık İcra" value={has(customer.acik_icra_varmi) ? 'Var' : 'Yok'} danger={has(customer.acik_icra_varmi)} success={!has(customer.acik_icra_varmi)} />
+                            <BadgeField label="Kapalı İcra" value={has(customer.kapali_icra_varmi) ? 'Var' : 'Yok'} warning={has(customer.kapali_icra_varmi)} success={!has(customer.kapali_icra_varmi)} />
+
                             <BadgeField label="Dava Dosyası" value={has(customer.dava_dosyasi_varmi) ? 'Var' : 'Temiz'} danger={has(customer.dava_dosyasi_varmi)} />
                             <BadgeField label="Araç Kaydı" value={has(customer.arac_varmi) ? 'Var' : 'Yok'} success={has(customer.arac_varmi)} icon={Car} />
                             <BadgeField label="Tapu Kaydı" value={has(customer.tapu_varmi) ? 'Var' : 'Yok'} success={has(customer.tapu_varmi)} icon={Home} />
 
-                            {/* NEW: Lawyer Inquiry Status */}
+                            {/* Lawyer Inquiry Status */}
                             <BadgeField
                                 label="Avukat Sorgusu"
-                                value={customer.avukat_sorgu_durumu || ' yapılmadı'}
+                                value={customer.avukat_sorgu_durumu || 'Sorgu Bekleniyor'}
                                 success={customer.avukat_sorgu_durumu === 'Temiz'}
                                 danger={customer.avukat_sorgu_durumu === 'Riskli' || customer.avukat_sorgu_durumu === 'Olumsuz'}
+                                warning={!customer.avukat_sorgu_durumu || customer.avukat_sorgu_durumu === 'Sorgu Bekleniyor'}
                             />
                         </div>
 
-                        {/* Lawyer Inquiry Note */}
-                        {customer.avukat_sorgu_sonuc && (
+                        {/* Open Execution Detail - NEW */}
+                        {has(customer.acik_icra_varmi) && (
                             <div className="mt-4 pt-3 border-t border-gray-200">
-                                <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Avukat Sorgu Notu</span>
-                                <p className="text-sm text-gray-800">{customer.avukat_sorgu_sonuc}</p>
+                                <span className="text-[10px] uppercase font-bold text-red-700 block mb-1">Açık İcra Detayı</span>
+                                <p className="text-xs text-gray-700 bg-white p-2 rounded border border-red-100">{customer.acik_icra_detay || 'Detay girilmemiş'}</p>
                             </div>
                         )}
+
+                        {/* Closed Execution Detail */}
+                        {has(customer.kapali_icra_varmi) && (
+                            <div className="mt-2 pt-2 border-t border-gray-200 border-dashed">
+                                <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Kapalı İcra Detayı</span>
+                                <p className="text-xs text-gray-700 bg-white p-2 rounded border">{customer.kapali_icra_kapanis_sekli || 'Detay girilmemiş'}</p>
+                            </div>
+                        )}
+
+                        {/* Lawyer Inquiry Note */}
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Avukat Sorgu Notu</span>
+                            {customer.avukat_sorgu_sonuc ? (
+                                <p className="text-sm text-gray-800">{customer.avukat_sorgu_sonuc}</p>
+                            ) : (
+                                <p className="text-xs text-yellow-600 italic bg-yellow-50 p-2 rounded border border-yellow-100 flex items-center gap-2">
+                                    <AlertCircle className="w-3 h-3" />
+                                    Sorgu cevabı bekleniyor...
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
