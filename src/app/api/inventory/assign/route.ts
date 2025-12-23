@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
             await logAction({
                 log_id: crypto.randomUUID(),
                 timestamp: now,
-                user_email: session.user.email,
+                user_email: session.user.email || 'System',
                 customer_id: customerId,
                 action: 'UPDATE_FIELDS', // Or custom action?
                 note: `Stock Item Assigned: ${item.marka} ${item.model} (IMEI: ${item.imei})`
