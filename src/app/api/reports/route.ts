@@ -70,7 +70,17 @@ export async function GET(req: NextRequest) {
         };
 
         const stats = {
-            city: {} as Record<string, { total: number, delivered: number, approved: number, rejected: number, noEdevlet: number, unreachable: number, other: number }>,
+            city: {} as Record<string, {
+                total: number;
+                delivered: number;
+                approved: number;
+                rejected: number;
+                cancelled: number;
+                kefil: number;
+                noEdevlet: number;
+                unreachable: number;
+                other: number;
+            }>,
             profession: {} as Record<string, { count: number, totalIncome: number, avgIncome: number }>,
             product: {} as Record<string, number>,
             rejection: {} as Record<string, number>,
@@ -178,20 +188,27 @@ export async function GET(req: NextRequest) {
                         delivered: 0,
                         approved: 0,
                         rejected: 0,
+                        cancelled: 0,
+                        kefil: 0,
                         noEdevlet: 0,
                         unreachable: 0,
                         other: 0
-                    } as any;
+                    };
                 }
 
-                const cStats = stats.city[city] as any;
+                const cStats = stats.city[city];
                 cStats.total++;
 
                 if (status === 'Teslim edildi') cStats.delivered++;
                 else if (status === 'Onaylandı' || approval === 'Onaylandı') cStats.approved++;
                 else if (status === 'E-Devlet paylaşmak istemedi') cStats.noEdevlet++;
                 else if (['Ulaşılamadı', 'Meşgul/Hattı kapalı', 'Cevap Yok'].includes(status)) cStats.unreachable++;
-                else if (['Reddetti', 'Uygun değil', 'İptal/Vazgeçti'].includes(status) || approval === 'Reddedildi') cStats.rejected++;
+                else if (status === 'Kefil bekleniyor' || approval === 'Kefil İstendi') cStats.kefil++;
+                else if (['İptal/Vazgeçti', 'Reddetti'].includes(status)) cStats.cancelled++; // Grouping 'Reddetti' (User Rejected) with Cancelled as they are similar outcome for this report? Or keep separate? "Vazgeçen" usually implies İptal. 'Reddetti' implies 'Offer refused'. Keep them detailed?
+                // User asked for "Vazgeçen". 'İptal/Vazgeçti' is the main one. 'Reddetti' is usually 'Fiyatı beğenmedi'.
+                // Let's put 'Reddetti' in Rejected for now, or Cancelled?
+                // Let's put 'İptal/Vazgeçti' to cancelled. 'Reddetti' to rejected.
+                else if (status === 'Uygun değil' || approval === 'Reddedildi' || status === 'Reddetti') cStats.rejected++;
                 else cStats.other++;
             }
 
