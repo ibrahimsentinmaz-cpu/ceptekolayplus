@@ -87,7 +87,7 @@ export default function DashboardLayout({
                                                 className={isActive('/dashboard/approvals') ? '' : 'text-gray-600 hover:text-gray-900'}
                                             >
                                                 <LayoutDashboard className="w-4 h-4 mr-2" />
-                                                Onay
+                                                Onay {stats?.pending_approval ? `(${stats.pending_approval})` : ''}
                                             </Button>
                                         </Link>
 

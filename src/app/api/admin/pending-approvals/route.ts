@@ -17,12 +17,12 @@ export async function GET(req: NextRequest) {
 
     try {
         // Fetch only leads with "Başvuru alındı" status
-        const leads = await getLeads({ durum: 'Başvuru alındı' });
+        // Consistency Update: We trust 'durum' as the master status. 
+        // If it is 'Başvuru alındı', it is pending, even if 'onay_durumu' was previously set (e.g. to 'Kefil İstendi').
+        const pendingLeads = await getLeads({ durum: 'Başvuru alındı' });
 
-        // Filter out those that are already decided (processed)
-        const pendingLeads = leads.filter(l =>
-            !l.onay_durumu || l.onay_durumu === 'Beklemede'
-        );
+        // We no longer filter by onay_durumu here to ensure re-submitted apps appear.
+
 
         // Sort by creation date (oldest first for FIFO)
         pendingLeads.sort((a, b) => {

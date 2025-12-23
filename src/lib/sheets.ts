@@ -387,8 +387,9 @@ export async function getLeadStats() {
             }
         }
 
-        // Pending Apporval logic
-        const isPending = onay_durumu === 'Beklemede' || (durum === 'Başvuru alındı' && !onay_durumu);
+        // Pending Apporval logic (Simplified for consistency)
+        // If status is 'Başvuru alındı', it shows in Admin Panel as Pending, regardless of previous 'onay_durumu'.
+        const isPending = durum === 'Başvuru alındı';
         if (isPending) pending_approval++;
 
         if (onay_durumu === 'Kefil İstendi' || durum === 'Kefil bekleniyor') waiting_guarantor++;
