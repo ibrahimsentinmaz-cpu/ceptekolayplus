@@ -60,9 +60,9 @@ export default function ReportsPage() {
     // City - Filter out empty/invalid
     const cityData = Object.entries(stats.city || {})
         .filter(([name]) => name && name !== 'Belirsiz')
-        .sort((a, b) => b[1] - a[1])
+        .sort((a, b) => b[1].total - a[1].total)
         .slice(0, 10)
-        .map(([name, count]) => ({ name, count }));
+        .map(([name, data]) => ({ name, count: data.total }));
     // Profession - Filter out empty/invalid
     const professionData = Object.entries(stats.profession || {})
         .filter(([name, d]) => d.count > 0 && name && name !== 'Diğer' && name !== 'Bilinmiyor' && name.trim() !== '')
