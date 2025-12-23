@@ -102,7 +102,12 @@ export default function DeliveryReportsPage() {
 
 function DeliveryCustomerCard({ customer }: { customer: any }) {
     // Helper for boolean/string checks
-    const has = (val: any) => val === 'TRUE' || val === true || val === 'Var';
+    const has = (val: any) => {
+        if (val === true) return true;
+        if (!val) return false;
+        const s = String(val).trim().toLowerCase();
+        return s === 'true' || s === 'var' || s === 'evet' || s === 'mevcut';
+    };
     const cleanNum = (val: any) => val ? Number(val).toLocaleString('tr-TR') : '-';
 
     return (
@@ -240,10 +245,11 @@ function Field({ label, value, highlight, className }: any) {
     );
 }
 
-function BadgeField({ label, value, danger, success, icon: Icon }: any) {
+function BadgeField({ label, value, danger, success, warning, icon: Icon }: any) {
     let colorClass = "bg-gray-100 text-gray-600 border-gray-200";
     if (danger) colorClass = "bg-red-50 text-red-700 border-red-200";
     if (success) colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (warning) colorClass = "bg-yellow-50 text-yellow-700 border-yellow-200";
 
     return (
         <div className={`flex flex-col p-2 rounded border ${colorClass} text-center print:border-gray-400 print:bg-white print:text-black`}>

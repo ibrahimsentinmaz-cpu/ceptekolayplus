@@ -582,17 +582,23 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input
+                            <Select
                                 label="UYAP/Avukat Sorgu Durumu"
-                                value={data.avukat_sorgu_durumu || ''}
+                                value={data.avukat_sorgu_durumu || 'Yapılmadı'}
                                 onChange={(e) => handleChange('avukat_sorgu_durumu', e.target.value)}
-                                placeholder="Yapıldı / Yapılmadı"
+                                options={[
+                                    { value: 'Yapılmadı', label: 'Yapılmadı' },
+                                    { value: 'Sorgu Bekleniyor', label: 'Sorgu Bekleniyor' },
+                                    { value: 'Temiz', label: 'Temiz (Olumlu)' },
+                                    { value: 'Riskli', label: 'Riskli' },
+                                    { value: 'Olumsuz', label: 'Olumsuz' }
+                                ]}
                             />
                             <Input
                                 label="Sorgu Sonucu / Notlar"
                                 value={data.avukat_sorgu_sonuc || ''}
                                 onChange={(e) => handleChange('avukat_sorgu_sonuc', e.target.value)}
-                                placeholder="Örn: Riskli bir durum görünmüyor"
+                                placeholder="Örn: Riskli bir durum görünmüyor / Detay..."
                             />
                         </div>
                     </section>
