@@ -401,3 +401,67 @@ function ChartCard({ title, children }: { title: string, children: React.ReactNo
         </div>
     );
 }
+
+function CityMetricTable({ title, data, sortKey, color, showPercent }: {
+    title: string;
+    data: any;
+    sortKey: string;
+    color: 'blue' | 'emerald' | 'red' | 'orange' | 'purple' | 'gray';
+    showPercent?: boolean;
+}) {
+    if (!data) return null;
+
+    const sorted = Object.entries(data)
+        .map(([name, stats]: [string, any]) => ({ name, ...stats }))
+        .filter(c => c[sortKey] > 0)
+        .sort((a, b) => b[sortKey] - a[sortKey])
+        .slice(0, 10);
+
+    const colors = {
+        blue: 'text-blue-700 bg-blue-50',
+        emerald: 'text-emerald-700 bg-emerald-50',
+        red: 'text-red-700 bg-red-50',
+        orange: 'text-orange-700 bg-orange-50',
+        purple: 'text-purple-700 bg-purple-50',
+        gray: 'text-gray-700 bg-gray-50',
+    };
+
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden break-inside-avoid">
+            <div className={`px-4 py-3 border-b border-gray-100 font-semibold text-sm ${colors[color]}`}>
+                {title}
+            </div>
+            <div className="p-0">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-gray-500 font-medium">
+                        <tr>
+                            <th className="px-4 py-2">Şehir</th>
+                            <th className="px-4 py-2 text-right">Adet</th>
+                            {showPercent && <th className="px-4 py-2 text-right text-xs">%</th>}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {sorted.length === 0 ? (
+                            <tr><td colSpan={3} className="px-4 py-4 text-center text-gray-400 text-xs">Veri yok</td></tr>
+                        ) : sorted.map((city, idx) => (
+                            <tr key={city.name} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-2 text-gray-700 truncate max-w-[120px]" title={city.name}>
+                                    <span className="text-gray-400 text-xs mr-2 w-4 inline-block">{idx + 1}.</span>
+                                    {city.name}
+                                </td>
+                                <td className={'px-4 py-2 text-right font-medium ' + colors[color].split(' ')[0]}>
+                                    {city[sortKey]}
+                                </td>
+                                {showPercent && (
+                                    <td className="px-4 py-2 text-right text-xs text-gray-400">
+                                        {city.total > 0 ? '%' + Math.round((city[sortKey] / city.total) * 100) : '-'}
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
