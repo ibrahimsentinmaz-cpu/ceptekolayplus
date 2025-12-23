@@ -64,10 +64,11 @@ export default function InventoryPage() {
     };
 
     // Filter items
+    // Filter items
     const filteredItems = items.filter(item =>
-        item.imei.includes(search) ||
-        item.seri_no.toLowerCase().includes(search.toLowerCase()) ||
-        item.model.toLowerCase().includes(search.toLowerCase())
+        (item.imei || '').includes(search) ||
+        (item.seri_no || '').toLowerCase().includes(search.toLowerCase()) ||
+        (item.model || '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (

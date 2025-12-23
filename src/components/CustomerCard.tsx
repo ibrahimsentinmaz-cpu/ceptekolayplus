@@ -782,9 +782,9 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
 
                                 {stockItems
                                     .filter(item =>
-                                        item.marka.toLowerCase().includes(stockSearch.toLowerCase()) ||
-                                        item.model.toLowerCase().includes(stockSearch.toLowerCase()) ||
-                                        item.imei.includes(stockSearch)
+                                        (item.marka || '').toLowerCase().includes(stockSearch.toLowerCase()) ||
+                                        (item.model || '').toLowerCase().includes(stockSearch.toLowerCase()) ||
+                                        (item.imei || '').includes(stockSearch)
                                     )
                                     .map(item => (
                                         <div
