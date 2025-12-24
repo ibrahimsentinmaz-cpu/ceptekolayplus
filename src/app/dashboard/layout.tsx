@@ -2,11 +2,11 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Home, LogOut, PlusCircle, Search, User, UserCircle, BarChart2, FileSearch, Package, Loader2, LayoutDashboard, UserPlus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Home, LogOut, PlusCircle, Search, User, UserCircle, BarChart2, FileSearch, Package, Loader2, LayoutDashboard, UserPlus, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { LiveActivityTicker } from '@/components/LiveActivityTicker';
-import { useState, useEffect } from 'react';
 
 export default function DashboardLayout({
     children,
@@ -17,6 +17,12 @@ export default function DashboardLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [stats, setStats] = useState<{ pending_approval: number } | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Close sidebar on route change
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [pathname]);
 
     useEffect(() => {
         if (session?.user?.role === 'ADMIN') {
@@ -52,6 +58,18 @@ export default function DashboardLayout({
                                 <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100 hidden sm:inline-block">
                                     {session?.user?.email}
                                 </span>
+                            </div>
+
+                            {/* Mobile Hamburger Button */}
+                            <div className="md:hidden flex items-center">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="text-gray-600 hover:text-gray-900"
+                                >
+                                    <Menu className="w-6 h-6" />
+                                </Button>
                             </div>
 
                             {/* Global Navigation - Desktop */}
@@ -148,51 +166,140 @@ export default function DashboardLayout({
                         </div>
                     </div>
 
-                    {/* Mobile Navigation Row (Horizontal Scroll) */}
-                    <div className="md:hidden overflow-x-auto py-2 flex gap-2 border-t border-gray-100 no-scrollbar">
-                        <Link href="/dashboard">
-                            <Button variant={isActive('/dashboard') ? 'primary' : 'outline'} size="sm" className="whitespace-nowrap">
-                                Panel
-                            </Button>
-                        </Link>
-                        {session?.user?.role === 'ADMIN' && (
-                            <>
-                                <Link href="/dashboard/reports">
-                                    <Button variant={isActive('/dashboard/reports') ? 'primary' : 'outline'} size="sm" className="whitespace-nowrap">
-                                        Raporlar
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/inventory">
-                                    <Button variant={isActive('/dashboard/inventory') ? 'primary' : 'outline'} size="sm" className="whitespace-nowrap">
-                                        Stok
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/search">
-                                    <Button variant={isActive('/dashboard/search') ? 'primary' : 'outline'} size="sm" className="whitespace-nowrap">
-                                        Sorgula
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/add">
-                                    <Button variant={isActive('/dashboard/add') ? 'primary' : 'outline'} size="sm" className="whitespace-nowrap">
-                                        Ekle
-                                    </Button>
-                                </Link>
-                            </>
-                        )}
-                        <Button variant="secondary" onClick={() => signOut()} size="sm" className="whitespace-nowrap ml-auto">
-                            Çıkış
-                        </Button>
-                    </div>
                 </div>
-            </header>
 
-            {/* 🎉 Live Activity Ticker - Gamification! */}
-            <LiveActivityTicker />
+                {/* Mobile Sidebar Overlay */}
+                {isSidebarOpen && (
+                    <div className="fixed inset-0 z-50 flex">
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+                            onClick={() => setIsSidebarOpen(false)}
+                        />
 
-            {/* Page Content */}
-            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-                {children}
-            </main>
+                        {/* Sidebar Panel */}
+                        <div className="relative bg-white w-64 h-full shadow-xl flex flex-col p-6 animate-in slide-in-from-left duration-300">
+                            {/* Close Button */}
+                            <div className="flex justify-between items-center mb-8">
+                                <h2 className="text-xl font-bold text-gray-900">Menü</h2>
+                                <Button variant="ghost" size="sm" onClick={() => setIsSidebarOpen(false)}>
+                                    <X className="w-6 h-6 text-gray-500" />
+                                </Button>
+                            </div>
+
+                            {/* Navigation Links */}
+                            <nav className="flex flex-col gap-2 flex-1 overflow-y-auto">
+                                <Link href="/dashboard">
+                                    <Button
+                                        variant={isActive('/dashboard') ? 'primary' : 'ghost'}
+                                        className="w-full justify-start text-sm"
+                                    >
+                                        <LayoutDashboard className="w-4 h-4 mr-3" />
+                                        Panel
+                                    </Button>
+                                </Link>
+
+                                <Link href="/dashboard/my-leads">
+                                    <Button
+                                        variant={isActive('/dashboard/my-leads') ? 'primary' : 'ghost'}
+                                        className="w-full justify-start text-sm"
+                                    >
+                                        <UserPlus className="w-4 h-4 mr-3" />
+                                        Müşterilerim
+                                    </Button>
+                                </Link>
+
+                                {session?.user?.role === 'ADMIN' && (
+                                    <>
+                                        <div className="my-2 border-t border-gray-100" />
+                                        <p className="text-xs font-semibold text-gray-400 uppercase px-2 mb-2">Yönetici</p>
+
+                                        <Link href="/dashboard/approvals">
+                                            <Button
+                                                variant={isActive('/dashboard/approvals') ? 'primary' : 'ghost'}
+                                                className="w-full justify-start text-sm"
+                                            >
+                                                <LayoutDashboard className="w-4 h-4 mr-3" />
+                                                Onay {stats?.pending_approval ? `(${stats.pending_approval})` : ''}
+                                            </Button>
+                                        </Link>
+
+                                        <Link href="/dashboard/reports">
+                                            <Button
+                                                variant={isActive('/dashboard/reports') ? 'primary' : 'ghost'}
+                                                className="w-full justify-start text-sm"
+                                            >
+                                                <BarChart2 className="w-4 h-4 mr-3" />
+                                                Raporlar
+                                            </Button>
+                                        </Link>
+
+                                        <Link href="/dashboard/inventory">
+                                            <Button
+                                                variant={isActive('/dashboard/inventory') ? 'primary' : 'ghost'}
+                                                className="w-full justify-start text-sm"
+                                            >
+                                                <Package className="w-4 h-4 mr-3" />
+                                                Stok
+                                            </Button>
+                                        </Link>
+
+                                        <Link href="/dashboard/search">
+                                            <Button
+                                                variant={isActive('/dashboard/search') ? 'primary' : 'ghost'}
+                                                className="w-full justify-start text-sm"
+                                            >
+                                                <Search className="w-4 h-4 mr-3" />
+                                                Sorgula
+                                            </Button>
+                                        </Link>
+
+                                        <Link href="/dashboard/add">
+                                            <Button
+                                                variant={isActive('/dashboard/add') ? 'primary' : 'ghost'}
+                                                className="w-full justify-start text-sm"
+                                            >
+                                                <PlusCircle className="w-4 h-4 mr-3" />
+                                                Ekle
+                                            </Button>
+                                        </Link>
+                                    </>
+                                )}
+                            </nav>
+
+                            {/* Bottom Actions */}
+                            <div className="mt-auto pt-4 border-t border-gray-100">
+                                <div className="flex items-center gap-3 mb-4 px-2">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                                        {session?.user?.name?.[0] || 'U'}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => signOut()}
+                                    className="w-full justify-center"
+                                >
+                                    <LogOut className="w-4 h-4 mr-2" />
+                                    Çıkış Yap
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
         </div>
+            </header >
+
+        {/* 🎉 Live Activity Ticker - Gamification! */ }
+        < LiveActivityTicker />
+
+        {/* Page Content */ }
+        < main className = "flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full" >
+            { children }
+            </main >
+        </div >
     );
 }
