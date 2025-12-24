@@ -86,7 +86,7 @@ export default function DeliveryReportsPage() {
                     </div>
                 ) : (
                     customers.map((customer, idx) => (
-                        <div key={customer.id || idx} className="print:break-after-page print:h-screen print:flex print:items-center">
+                        <div key={customer.id || idx} className="print:break-after-page print:block">
                             <DeliveryCustomerCard customer={customer} />
                         </div>
                     ))
@@ -111,12 +111,12 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
     const cleanNum = (val: any) => val ? Number(val).toLocaleString('tr-TR') : '-';
 
     return (
-        <div className="w-full max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
+        <div className="w-full max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm print:shadow-none print:border-2 print:border-gray-800 print:rounded-none print:w-full print:max-w-none">
             {/* 1. Header Band */}
-            <div className="bg-indigo-900 text-white px-8 py-6 flex justify-between items-start print:bg-gray-100 print:text-black print:border-b-2 print:border-gray-800">
+            <div className="bg-indigo-900 text-white px-8 py-6 flex justify-between items-start print:bg-gray-100 print:text-black print:border-b-2 print:border-gray-800 print:px-4 print:py-3">
                 <div>
-                    <h2 className="text-2xl font-bold uppercase tracking-wide">{customer.ad_soyad}</h2>
-                    <div className="mt-2 flex items-center gap-4 text-indigo-200 print:text-gray-600 font-medium">
+                    <h2 className="text-2xl font-bold uppercase tracking-wide print:text-xl">{customer.ad_soyad}</h2>
+                    <div className="mt-2 flex items-center gap-4 text-indigo-200 print:text-gray-600 font-medium print:mt-1 print:text-sm">
                         <span className="flex items-center gap-1"><User className="w-4 h-4" /> {customer.sehir || 'Şehir Belirtilmemiş'}</span>
                         <span>•</span>
                         <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" /> {customer.basvuru_kanali || 'Kanal Yok'}</span>
@@ -129,7 +129,7 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
             </div>
 
             {/* 2. Main Grid */}
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 print:p-4 print:grid-cols-2 print:gap-x-6 print:gap-y-4">
 
                 {/* Left Column */}
                 <div className="space-y-8">
@@ -218,7 +218,7 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
             </div>
 
             {/* 3. Footer: Admin Decision */}
-            <div className="border-t border-gray-200 mt-4 p-8 bg-gray-50 print:bg-white print:border-t-2 print:border-gray-800">
+            <div className="border-t border-gray-200 mt-4 p-8 bg-gray-50 print:bg-white print:border-t-2 print:border-gray-800 print:p-4 print:mt-2">
                 <Section title="Yönetici Kararı & Notlar" icon={Gavel}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
@@ -239,6 +239,7 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
             {/* Watermark for Print */}
             <div className="hidden print:block text-center pb-4 text-[10px] text-gray-400 font-mono uppercase">
                 CepteKolay+ Güvenlik Raporu • {new Date().toLocaleString('tr-TR')} • {customer.id}
+                {/* Print Layout Optimized - v2 */}
             </div>
         </div>
     );
@@ -248,7 +249,7 @@ function DeliveryCustomerCard({ customer }: { customer: any }) {
 function Section({ title, icon: Icon, children }: any) {
     return (
         <div>
-            <h3 className="text-sm font-bold text-gray-500 mb-4 flex items-center gap-2 uppercase tracking-wide border-b border-gray-200 pb-2 print:text-black print:border-gray-800">
+            <h3 className="text-sm font-bold text-gray-500 mb-4 flex items-center gap-2 uppercase tracking-wide border-b border-gray-200 pb-2 print:text-black print:border-gray-800 print:mb-2 print:pb-1">
                 <Icon className="w-4 h-4 text-indigo-600 print:text-black" />
                 {title}
             </h3>
