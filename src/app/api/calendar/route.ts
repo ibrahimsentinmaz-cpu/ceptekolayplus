@@ -19,7 +19,7 @@ export async function GET() {
         // Usually Calendar should show own appointments.
         // Let's filter by ownership if Sales Rep.
         const filter = session.user.role === 'SALES_REP'
-            ? { ...query, sahip: session.user.email }
+            ? { ...query, sahip: session.user.email || undefined }
             : query;
 
         const leads = await getLeads(filter);
