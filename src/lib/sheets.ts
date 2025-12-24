@@ -497,7 +497,7 @@ export async function getLeadStats() {
         pending_approval,
         waiting_guarantor,
         delivered,
-        approved: statusCounts['Onaylandı'] || 0,
+        approved, // Use the explicit counter, NOT statusCounts['Onaylandı']
         today_called,
         statusCounts
     };
