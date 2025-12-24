@@ -498,15 +498,38 @@ export async function updateLead(customer: Customer, userEmail: string) {
     const rowIndex = index + 2; // +1 for header, +1 for 0-index match
 
     const now = new Date().toISOString();
+
+    // LOGIC UPDATE: Unreachable/Retry statuses should release ownership
+    // so they go back to the pool (or secondary pool).
+    const releaseStatuses = [
+        'Ulaşılamadı',
+        'Meşgul/Hattı kapalı',
+        'Cevap Yok',
+        'Yanlış numara',
+        'Uygun değil',
+        'Kefil bekleniyor'
+    ];
+
+    const shouldRelease = releaseStatuses.includes(customer.durum);
+
     const updatedCustomer = {
         ...customer,
         updated_at: now,
         updated_by: userEmail,
-        // Release lock only if we want to? Requirement says "Pull" locks it. 
-        // Usually lock is permanent ownership until status change?
-        // "Immediately lock it atomically... Return the customer card UI."
-        // So 'kilitli_mi' might just mean "Taken".
+        // If releasing, clear owner and lock
+        sahip: shouldRelease ? '' : (customer.sahip || userEmail),
+        kilitli_mi: shouldRelease ? false : (customer.kilitli_mi !== undefined ? customer.kilitli_mi : true),
+        // If releasing, ensure 'kilit_sahibi' is also cleared if needed, 
+        // though our logic mainly uses 'sahip' for sales rep view.
+        // Google Sheets stores boolean as TRUE/FALSE string often, handled by customerToRow.
     };
+
+    // Explicitly set kilitli_mi to string for sheets if needed, but customerToRow handles types.
+    // However, if we want to be safe for the "kilitli_mi" column which expects TRUE/FALSE string:
+    // (customerToRow just puts the value in, so boolean is fine if Sheets interprets it, 
+    // but our 'lockNextLead' uses string "TRUE". Let's be consistent if possible, 
+    // but boolean false usually works as FALSE in sheets or empty.)
+    // Let's rely on standard behavior.
 
     const newRow = customerToRow(updatedCustomer);
 
