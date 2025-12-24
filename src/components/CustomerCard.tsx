@@ -143,9 +143,23 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
         try {
             // Auto-fill delivery tracking if marking as delivered
             const updateData = { ...data };
+            const now = new Date();
+
             if ((data.durum === 'Teslim edildi' || data.durum === 'Satış yapıldı/Tamamlandı') && !data.teslim_tarihi) {
-                updateData.teslim_tarihi = new Date().toISOString();
+                updateData.teslim_tarihi = now.toISOString();
                 updateData.teslim_eden = data.sahip || 'Unknown';
+            }
+
+            // AUTO-UPDATE Call Time for "Call Activity" statuses
+            // If the user marks as Unreachable/Busy/Wrong Number, it implies a call was made NOW.
+            // We force update 'son_arama_zamani' to ensure it counts in stats.
+            const callActivityStatuses = ['Ulaşılamadı', 'Meşgul/Hattı kapalı', 'Cevap Yok', 'Yanlış numara', 'Uygun değil', 'Kefil bekleniyor'];
+            if (callActivityStatuses.includes(data.durum)) {
+                // Only update if it wasn't updated in the last minute (avoid double update if phone button was used)
+                const lastCall = data.son_arama_zamani ? new Date(data.son_arama_zamani).getTime() : 0;
+                if (now.getTime() - lastCall > 60000) {
+                    updateData.son_arama_zamani = now.toISOString();
+                }
             }
 
             const url = isNew ? '/api/leads/create' : `/api/leads/${data.id}`;
