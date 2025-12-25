@@ -160,25 +160,20 @@ export async function GET(req: NextRequest) {
                 stats.funnel.sale++;
             }
 
-            // 6. Remaining to Call (Simplified Pool Logic)
-            // If not locked and status suggests action
-            if (locked !== 'TRUE' && locked !== true && !owner) {
-                if (status === 'Yeni') {
-                    stats.remainingToCall++;
-                } else if (status === 'Daha sonra aranmak istiyor' && nextCall) {
-                    // Check time (simple check)
-                    const scheduleTime = new Date(nextCall).getTime();
-                    if (scheduleTime <= nowTime) stats.remainingToCall++;
-                } else if (['Ulaşılamadı', 'Meşgul/Hattı kapalı', 'Cevap Yok'].includes(status)) {
-                    // Check 2h
-                    if (!lastCalled) {
-                        stats.remainingToCall++;
-                    } else {
-                        const lastCallTime = new Date(lastCalled).getTime();
-                        if ((nowTime - lastCallTime) > TWO_HOURS) stats.remainingToCall++;
-                    }
-                }
+            // 6. Remaining to Call (Kalan Aranacak)
+            // User requested: Total = TotalCalled + Remaining
+            // So Remaining must be "Anyone who has NOT been called yet".
+            if (!lastCalled) {
+                stats.remainingToCall++;
             }
+            // Original Pool Logic was:
+            /*
+            if (locked !== 'TRUE' && locked !== true && !owner) {
+                if (status === 'Yeni') stats.remainingToCall++;
+                // ...
+            }
+            */
+            // We are changing this to strict "Not Called" to satisfy the report math check.
 
             // 7. City Stats (Detailed)
             if (city) {
