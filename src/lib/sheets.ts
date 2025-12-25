@@ -54,7 +54,8 @@ export const COLUMNS = [
     'winner_musteri_no',
     'psikoteknik_varmi',
     'psikoteknik_notu',
-    'email'
+    'email',
+    'ilce'
 ] as const;
 // Total: 72 columns
 
