@@ -2,60 +2,7 @@ import turkey from 'turkey-neighbourhoods';
 
 // ... other imports
 
-const [data, setData] = useState<Customer>(initialData);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
 
-// City/District Logic
-const [districts, setDistricts] = useState<string[]>([]);
-
-// Load districts on mount or when city changes
-const handleCityChange = (cityName: string) => {
-    const city = turkey.cityList.find(c => c.name === cityName);
-    if (city) {
-        const districtList = turkey.getDistrictsByCityCode(city.code);
-        setDistricts(districtList);
-    } else {
-        setDistricts([]);
-    }
-    setData(prev => ({ ...prev, sehir: cityName, ilce: '' })); // Reset district on city change
-};
-
-// Initial load handling logic would be good, but for now we rely on the user interacting or just render.
-// Actually, we should populate districts if data.sehir exists initially.
-useState(() => {
-    if (initialData.sehir) {
-        const city = turkey.cityList.find(c => c.name === initialData.sehir);
-        if (city) {
-            const districtList = turkey.getDistrictsByCityCode(city.code);
-            setDistricts(districtList);
-        }
-    }
-});
-
-    // ... existing Inventory state ...
-
-// ...
-
-                            <Select
-                                label="Şehir"
-                                value={data.sehir || ''}
-                                onChange={(e) => handleCityChange(e.target.value)}
-                                options={[
-                                    { value: '', label: 'Seçiniz...' },
-                                    ...turkey.cityList.map(city => ({ value: city.name, label: city.name }))
-                                ]}
-                            />
-                            <Select
-                                label="İlçe"
-                                value={data.ilce || ''}
-                                onChange={(e) => handleChange('ilce', e.target.value)}
-                                options={[
-                                    { value: '', label: 'Seçiniz...' },
-                                    ...districts.map(d => ({ value: d, label: d }))
-                                ]}
-                                disabled={!data.sehir}
-                            />
 interface CustomerCardProps {
     initialData: Customer;
     onSave?: (updated: Customer) => void;
@@ -93,6 +40,30 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
     const [data, setData] = useState<Customer>(initialData);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // City/District Logic
+    const [districts, setDistricts] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (initialData.sehir) {
+            const city = turkey.cityList.find(c => c.name === initialData.sehir);
+            if (city) {
+                const districtList = turkey.getDistrictsByCityCode(city.code);
+                setDistricts(districtList);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleCityChange = (cityName: string) => {
+        const city = turkey.cityList.find(c => c.name === cityName);
+        if (city) {
+            const districtList = turkey.getDistrictsByCityCode(city.code);
+            setDistricts(districtList);
+        } else {
+            setDistricts([]);
+        }
+        setData(prev => ({ ...prev, sehir: cityName, ilce: '' }));
+    };
 
     // Inventory State
     const [isStockModalOpen, setIsStockModalOpen] = useState(false);
