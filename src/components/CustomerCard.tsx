@@ -909,6 +909,14 @@ Avukat Sorgusu : ${customer.avukat_sorgu_durumu || '-'} Açıklaması ${customer
             summary += `\n\n📝 Satıcı Notu: ${customer.arama_not_kisa}`;
         }
 
+        // Varlık Detayları
+        if (customer.tapu_varmi === 'Evet' && customer.tapu_detay) {
+            summary += `\n\n🏠 Tapu Detayı: ${customer.tapu_detay}`;
+        }
+        if (customer.arac_varmi === 'Evet' && customer.arac_detay) {
+            summary += `\n🚗 Araç Detayı: ${customer.arac_detay}`;
+        }
+
         // Kefil Bilgileri Ekleme
         if (customer.kefil_ad_soyad) {
             summary += `\n\n--- 🤝 KEFİL BİLGİLERİ ---\n`;
