@@ -1,6 +1,12 @@
-import turkey from 'turkey-neighbourhoods';
+'use client';
 
-// ... other imports
+import { useState, useEffect } from 'react';
+import { Customer, LeadStatus, InventoryItem } from '@/lib/types';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Select } from './ui/Select';
+import { Loader2, AlertCircle, CheckCircle, Info, Phone, Package, Smartphone, Search, RefreshCw } from 'lucide-react';
+import turkey from 'turkey-neighbourhoods';
 
 
 interface CustomerCardProps {
