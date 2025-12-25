@@ -321,6 +321,8 @@ export async function lockNextLead(userEmail: string): Promise<(Customer & { sou
         { col: 'updated_by', val: userEmail }
     ];
 
+    const newCustomerData = { ...target.customer, ...Object.fromEntries(updates.map(u => [u.col, u.val])) };
+
     // Determine Source for User Feedback
     let source = 'Genel';
     if (target.customer.durum === 'Daha sonra aranmak istiyor') source = '📅 Randevu';
