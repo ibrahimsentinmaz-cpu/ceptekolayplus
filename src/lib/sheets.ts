@@ -346,16 +346,6 @@ export async function lockNextLead(userEmail: string): Promise<Customer | null> 
 
 // import { formatInTimeZone } from 'date-fns-tz';
 
-// Direct Index Access for Performance
-// This avoids creating thousands of Customer objects for simple counting
-// Ensure these match COLUMNS const
-const COL_DURUM = COLUMNS.indexOf('durum');
-const COL_ONAY_DURUMU = COLUMNS.indexOf('onay_durumu');
-const COL_SON_ARAMA = COLUMNS.indexOf('son_arama_zamani');
-const COL_SONRAKI_ARAMA = COLUMNS.indexOf('sonraki_arama_zamani');
-const COL_KILITLI = COLUMNS.indexOf('kilitli_mi');
-const COL_SAHIP = COLUMNS.indexOf('sahip');
-
 export async function getLeadStats() {
     const client = getSheetsClient();
     // Fetch A2:ZZ but impose a SAFETY LIMIT for Vercel
