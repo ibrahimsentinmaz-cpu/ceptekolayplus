@@ -321,13 +321,18 @@ export async function lockNextLead(userEmail: string): Promise<(Customer & { sou
         { col: 'updated_by', val: userEmail }
     ];
 
-    const newCustomerData = { ...target.customer, ...Object.fromEntries(updates.map(u => [u.col, u.val])) };
+    // Determine Source for User Feedback
+    let source = 'Genel';
+    if (target.customer.durum === 'Daha sonra aranmak istiyor') source = '📅 Randevu';
+    else if (target.customer.durum === 'Yeni') source = '🆕 Yeni Kayıt';
+    else source = '♻️ Tekrar Arama';
 
     // Explicitly set types for Customer properties that might be undefined
-    const finalCustomer: Customer = {
+    // And include source info
+    const finalCustomer: Customer & { source: string } = {
         ...newCustomerData,
         durum: 'Aranacak', // Ensure strict literal type
-        // ... other fields kept as is
+        source: source // Return source info
     };
 
     const newRow = customerToRow(finalCustomer);
