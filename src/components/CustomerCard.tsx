@@ -900,42 +900,43 @@ function ApprovalSummaryModal({ isOpen, onClose, customer }: { isOpen: boolean; 
     if (!isOpen) return null;
 
     const generateSummary = () => {
-        let summary = `Adı : ${customer.ad_soyad || '-'}
-Şehri : ${customer.sehir || '-'} / ${customer.ilce || '-'}
-Meslek / Son iş yeri çalışma süresi : ${customer.meslek_is || '-'} / ${customer.ayni_isyerinde_sure_ay || '?'} aydır aynı iş yerinde
-Son yatan maaş: ${customer.son_yatan_maas || '-'}
-Mülkiyet : ${customer.mulkiyet_durumu || '-'}
-Dava Dosyası : ${customer.dava_dosyasi_varmi || '-'} ${customer.dava_detay || ''}
-Gizli Dosyası : ${customer.gizli_dosya_varmi || '-'} ${customer.gizli_dosya_detay || ''}
-Açık icrası : ${customer.acik_icra_varmi || '-'} ${customer.acik_icra_detay || ''}
-Kapalı icra : ${customer.kapali_icra_varmi || '-'} Açıklama: ${customer.kapali_icra_kapanis_sekli || ''}
-Avukat Sorgusu : ${customer.avukat_sorgu_durumu || '-'} Açıklaması ${customer.avukat_sorgu_sonuc || ''}`;
+        let summary = `*Adı :* ${customer.ad_soyad || '-'}
+*Talep Edilen Ürün :* ${customer.talep_edilen_urun || '-'}
+*Şehri :* ${customer.sehir || '-'} / ${customer.ilce || '-'}
+*Meslek / Son iş yeri çalışma süresi :* ${customer.meslek_is || '-'} / ${customer.ayni_isyerinde_sure_ay || '?'} aydır aynı iş yerinde
+*Son yatan maaş:* ${customer.son_yatan_maas || '-'}
+*Mülkiyet :* ${customer.mulkiyet_durumu || '-'}
+*Dava Dosyası :* ${customer.dava_dosyasi_varmi || '-'} ${customer.dava_detay || ''}
+*Gizli Dosyası :* ${customer.gizli_dosya_varmi || '-'} ${customer.gizli_dosya_detay || ''}
+*Açık icrası :* ${customer.acik_icra_varmi || '-'} ${customer.acik_icra_detay || ''}
+*Kapalı icra :* ${customer.kapali_icra_varmi || '-'} Açıklama: ${customer.kapali_icra_kapanis_sekli || ''}
+*Avukat Sorgusu :* ${customer.avukat_sorgu_durumu || '-'} Açıklaması ${customer.avukat_sorgu_sonuc || ''}`;
 
         // Satıcı Notu Ekleme
         if (customer.arama_not_kisa) {
-            summary += `\n\n📝 Satıcı Notu: ${customer.arama_not_kisa}`;
+            summary += `\n\n📝 *Satıcı Notu:* ${customer.arama_not_kisa}`;
         }
 
         // Varlık Detayları
         if (customer.tapu_varmi === 'Evet' && customer.tapu_detay) {
-            summary += `\n\n🏠 Tapu Detayı: ${customer.tapu_detay}`;
+            summary += `\n\n🏠 *Tapu Detayı:* ${customer.tapu_detay}`;
         }
         if (customer.arac_varmi === 'Evet' && customer.arac_detay) {
-            summary += `\n🚗 Araç Detayı: ${customer.arac_detay}`;
+            summary += `\n🚗 *Araç Detayı:* ${customer.arac_detay}`;
         }
 
         // Kefil Bilgileri Ekleme
         if (customer.kefil_ad_soyad) {
-            summary += `\n\n--- 🤝 KEFİL BİLGİLERİ ---\n`;
-            summary += `Adı Soyadı: ${customer.kefil_ad_soyad}\n`;
-            summary += `Telefon: ${customer.kefil_telefon || '-'}\n`;
-            summary += `Meslek: ${customer.kefil_meslek_is || '-'}\n`;
-            summary += `Maaş: ${customer.kefil_son_yatan_maas || '-'}\n`;
-            summary += `Çalışma Süresi: ${customer.kefil_ayni_isyerinde_sure_ay || '-'} Ay\n`;
-            summary += `İkametgah: ${customer.kefil_ikametgah_varmi || '-'}\n`;
-            summary += `Hizmet Dökümü: ${customer.kefil_hizmet_dokumu_varmi || '-'}\n`;
-            summary += `İcra Durumu: ${customer.kefil_acik_icra_varmi || '-'}\n`;
-            summary += `Tapu/Araç: ${customer.kefil_tapu_varmi || '-'}`;
+            summary += `\n\n--- 🤝 *KEFİL BİLGİLERİ* ---\n`;
+            summary += `*Adı Soyadı:* ${customer.kefil_ad_soyad}\n`;
+            summary += `*Telefon:* ${customer.kefil_telefon || '-'}\n`;
+            summary += `*Meslek:* ${customer.kefil_meslek_is || '-'}\n`;
+            summary += `*Maaş:* ${customer.kefil_son_yatan_maas || '-'}\n`;
+            summary += `*Çalışma Süresi:* ${customer.kefil_ayni_isyerinde_sure_ay || '-'} Ay\n`;
+            summary += `*İkametgah:* ${customer.kefil_ikametgah_varmi || '-'}\n`;
+            summary += `*Hizmet Dökümü:* ${customer.kefil_hizmet_dokumu_varmi || '-'}\n`;
+            summary += `*İcra Durumu:* ${customer.kefil_acik_icra_varmi || '-'}\n`;
+            summary += `*Tapu/Araç:* ${customer.kefil_tapu_varmi || '-'}`;
         }
 
         return summary;
