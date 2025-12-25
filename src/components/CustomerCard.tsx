@@ -6,7 +6,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Loader2, AlertCircle, CheckCircle, Info, Phone, Package, Smartphone, Search, RefreshCw } from 'lucide-react';
-import turkey from 'turkey-neighbourhoods';
+import { cityList, getDistrictsByCityCode } from 'turkey-neighbourhoods';
 
 
 interface CustomerCardProps {
@@ -52,18 +52,18 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
 
     useEffect(() => {
         if (initialData.sehir) {
-            const city = turkey.cityList.find(c => c.name === initialData.sehir);
+            const city = cityList.find(c => c.name === initialData.sehir);
             if (city) {
-                const districtList = turkey.getDistrictsByCityCode(city.code);
+                const districtList = getDistrictsByCityCode(city.code);
                 setDistricts(districtList);
             }
         }
     }, []); // Run once on mount
 
     const handleCityChange = (cityName: string) => {
-        const city = turkey.cityList.find(c => c.name === cityName);
+        const city = cityList.find(c => c.name === cityName);
         if (city) {
-            const districtList = turkey.getDistrictsByCityCode(city.code);
+            const districtList = getDistrictsByCityCode(city.code);
             setDistricts(districtList);
         } else {
             setDistricts([]);
@@ -386,7 +386,7 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 onChange={(e) => handleCityChange(e.target.value)}
                                 options={[
                                     { value: '', label: 'Seçiniz...' },
-                                    ...turkey.cityList.map(city => ({ value: city.name, label: city.name }))
+                                    ...cityList.map(city => ({ value: city.name, label: city.name }))
                                 ]}
                             />
                             <Select
