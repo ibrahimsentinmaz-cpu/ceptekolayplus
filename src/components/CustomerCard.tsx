@@ -859,9 +859,9 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                 {stockItems
                                     .filter(item =>
-                                        item.marka.toLowerCase().includes(stockSearch.toLowerCase()) ||
-                                        item.model.toLowerCase().includes(stockSearch.toLowerCase()) ||
-                                        item.imei.includes(stockSearch)
+                                        (item.marka || '').toLowerCase().includes(stockSearch.toLowerCase()) ||
+                                        (item.model || '').toLowerCase().includes(stockSearch.toLowerCase()) ||
+                                        (item.imei || '').includes(stockSearch)
                                     )
                                     .map(item => (
                                         <div key={item.id} className="border rounded-lg p-3 hover:bg-gray-50 flex justify-between items-center transition-colors">
