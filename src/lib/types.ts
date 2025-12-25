@@ -37,6 +37,7 @@ export interface Customer {
   winner_musteri_no?: string;
   dogum_tarihi?: string;
   sehir?: string;
+  ilce?: string;
   meslek_is?: string;
   mulkiyet_durumu?: string;
   durum: LeadStatus;

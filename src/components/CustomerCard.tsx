@@ -1,12 +1,61 @@
-'use client';
+import turkey from 'turkey-neighbourhoods';
 
-import { useState } from 'react';
-import { Customer, LeadStatus, InventoryItem } from '@/lib/types';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { Select } from './ui/Select';
-import { Loader2, AlertCircle, CheckCircle, Info, Phone, Package, Smartphone, Search, RefreshCw } from 'lucide-react';
+// ... other imports
 
+const [data, setData] = useState<Customer>(initialData);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+// City/District Logic
+const [districts, setDistricts] = useState<string[]>([]);
+
+// Load districts on mount or when city changes
+const handleCityChange = (cityName: string) => {
+    const city = turkey.cityList.find(c => c.name === cityName);
+    if (city) {
+        const districtList = turkey.getDistrictsByCityCode(city.code);
+        setDistricts(districtList);
+    } else {
+        setDistricts([]);
+    }
+    setData(prev => ({ ...prev, sehir: cityName, ilce: '' })); // Reset district on city change
+};
+
+// Initial load handling logic would be good, but for now we rely on the user interacting or just render.
+// Actually, we should populate districts if data.sehir exists initially.
+useState(() => {
+    if (initialData.sehir) {
+        const city = turkey.cityList.find(c => c.name === initialData.sehir);
+        if (city) {
+            const districtList = turkey.getDistrictsByCityCode(city.code);
+            setDistricts(districtList);
+        }
+    }
+});
+
+    // ... existing Inventory state ...
+
+// ...
+
+                            <Select
+                                label="Şehir"
+                                value={data.sehir || ''}
+                                onChange={(e) => handleCityChange(e.target.value)}
+                                options={[
+                                    { value: '', label: 'Seçiniz...' },
+                                    ...turkey.cityList.map(city => ({ value: city.name, label: city.name }))
+                                ]}
+                            />
+                            <Select
+                                label="İlçe"
+                                value={data.ilce || ''}
+                                onChange={(e) => handleChange('ilce', e.target.value)}
+                                options={[
+                                    { value: '', label: 'Seçiniz...' },
+                                    ...districts.map(d => ({ value: d, label: d }))
+                                ]}
+                                disabled={!data.sehir}
+                            />
 interface CustomerCardProps {
     initialData: Customer;
     onSave?: (updated: Customer) => void;
@@ -354,10 +403,24 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                     { value: 'Mağazadan', label: 'Mağazadan' }
                                 ]}
                             />
-                            <Input
+                            <Select
                                 label="Şehir"
                                 value={data.sehir || ''}
-                                onChange={(e) => handleChange('sehir', e.target.value)}
+                                onChange={(e) => handleCityChange(e.target.value)}
+                                options={[
+                                    { value: '', label: 'Seçiniz...' },
+                                    ...turkey.cityList.map(city => ({ value: city.name, label: city.name }))
+                                ]}
+                            />
+                            <Select
+                                label="İlçe"
+                                value={data.ilce || ''}
+                                onChange={(e) => handleChange('ilce', e.target.value)}
+                                options={[
+                                    { value: '', label: 'Seçiniz...' },
+                                    ...districts.map(d => ({ value: d, label: d }))
+                                ]}
+                                disabled={!data.sehir}
                             />
                             <Input
                                 label="E-Devlet Şifre"
@@ -854,7 +917,7 @@ function ApprovalSummaryModal({ isOpen, onClose, customer }: { isOpen: boolean; 
 
     const generateSummary = () => {
         let summary = `Adı : ${customer.ad_soyad || '-'}
-Şehri : ${customer.sehir || '-'}
+Şehri : ${customer.sehir || '-'} / ${customer.ilce || '-'}
 Meslek / Son iş yeri çalışma süresi : ${customer.meslek_is || '-'} / ${customer.ayni_isyerinde_sure_ay || '?'} aydır aynı iş yerinde
 Son yatan maaş: ${customer.son_yatan_maas || '-'}
 Mülkiyet : ${customer.mulkiyet_durumu || '-'}
