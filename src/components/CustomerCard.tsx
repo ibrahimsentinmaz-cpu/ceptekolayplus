@@ -312,8 +312,15 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 {data.telefon && (
                                     <button
                                         onClick={async () => {
-                                            // 1. Open phone app
-                                            window.location.href = `tel:${data.telefon}`;
+                                            // 1. Open phone app (Auto-prefix 0 if missing)
+                                            let phone = data.telefon || '';
+                                            // Strip non-numeric chars to be safe (optional, but good practice)
+                                            // phone = phone.replace(/\D/g, ''); 
+                                            // The user specifically asked for prefixing 0
+                                            if (!phone.startsWith('0')) {
+                                                phone = '0' + phone;
+                                            }
+                                            window.location.href = `tel:${phone}`;
 
                                             // 2. Update last call time in background
                                             try {
