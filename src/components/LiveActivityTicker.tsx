@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
 import { getRandomMessage, formatMessage } from '@/lib/activity-messages';
 
 interface ActivityStats {
@@ -65,10 +64,10 @@ export function LiveActivityTicker() {
             setCurrentIndex((prev) => {
                 const next = (prev + 1) % messages.length;
 
-                // Trigger confetti animation for success messages
-                if (messages[next]?.showConfetti) {
-                    fireConfetti();
-                }
+                // Trigger confetti animation for success messages - REMOVED
+                // if (messages[next]?.showConfetti) {
+                //     fireConfetti();
+                // }
 
                 return next;
             });
