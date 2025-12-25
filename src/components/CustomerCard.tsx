@@ -901,6 +901,7 @@ function ApprovalSummaryModal({ isOpen, onClose, customer }: { isOpen: boolean; 
 
     const generateSummary = () => {
         let summary = `*Adı :* ${customer.ad_soyad || '-'}
+*Doğum Tarihi :* ${customer.dogum_tarihi || '-'}
 *Talep Edilen Ürün :* ${customer.talep_edilen_urun || '-'}
 *Şehri :* ${customer.sehir || '-'} / ${customer.ilce || '-'}
 *Meslek / Son iş yeri çalışma süresi :* ${customer.meslek_is || '-'} / ${customer.ayni_isyerinde_sure_ay || '?'} aydır aynı iş yerinde
