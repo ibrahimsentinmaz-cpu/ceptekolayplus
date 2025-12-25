@@ -88,14 +88,18 @@ export default function Dashboard() {
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                             <h3 className="text-lg font-medium text-gray-900 mb-2">Yeni Görüşme Başlat</h3>
                             {stats && (
-                                <div className="flex justify-center gap-4 mb-4 text-xs">
-                                    <div className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100 flex flex-col items-center">
-                                        <span className="font-bold text-lg leading-none">{stats.available}</span>
-                                        <span className="opacity-80">Toplam Bekleyen</span>
+                                <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
+                                    <div className="p-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100 flex flex-col items-center">
+                                        <span className="font-bold text-lg leading-none">{stats.waiting_new}</span>
+                                        <span className="opacity-80">Yeni</span>
                                     </div>
-                                    <div className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-100 flex flex-col items-center">
-                                        <span className="font-bold text-lg leading-none">{stats.total_scheduled || 0}</span>
-                                        <span className="opacity-80">Randevulu</span>
+                                    <div className="p-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-100 flex flex-col items-center">
+                                        <span className="font-bold text-lg leading-none">{stats.waiting_scheduled}</span>
+                                        <span className="opacity-80">Randevu</span>
+                                    </div>
+                                    <div className="p-2 bg-orange-50 text-orange-700 rounded-lg border border-orange-100 flex flex-col items-center">
+                                        <span className="font-bold text-lg leading-none">{stats.waiting_retry}</span>
+                                        <span className="opacity-80">Tekrar</span>
                                     </div>
                                 </div>
                             )}
