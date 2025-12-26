@@ -116,6 +116,30 @@ function customerToRow(c: Partial<Customer>): any[] {
     return row;
 }
 
+function parseSheetDate(dateStr: string | undefined): number | null {
+    if (!dateStr) return null;
+
+    // 1. Try standard Date parsing (ISO 8601, etc.)
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d.getTime();
+
+    // 2. Try DD.MM.YYYY HH:mm format (Common in TR Sheets)
+    // Regex: (\d{1,2})[./](\d{1,2})[./](\d{4})(?:\s+(\d{1,2}):(\d{2}))?
+    const trMatch = dateStr.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+    if (trMatch) {
+        const day = parseInt(trMatch[1], 10);
+        const month = parseInt(trMatch[2], 10) - 1; // Months are 0-indexed
+        const year = parseInt(trMatch[3], 10);
+        const hour = trMatch[4] ? parseInt(trMatch[4], 10) : 0;
+        const minute = trMatch[5] ? parseInt(trMatch[5], 10) : 0;
+
+        const d2 = new Date(year, month, day, hour, minute);
+        if (!isNaN(d2.getTime())) return d2.getTime();
+    }
+
+    return null;
+}
+
 export async function getLeads(filters?: { sahip?: string; durum?: LeadStatus }) {
     const client = getSheetsClient();
     const response = await client.spreadsheets.values.get({
@@ -269,8 +293,8 @@ export async function lockNextLead(userEmail: string): Promise<(Customer & { sou
 
             // 1. Scheduled
             if (c.durum === 'Daha sonra aranmak istiyor' && c.sonraki_arama_zamani) {
-                const scheduleTime = new Date(c.sonraki_arama_zamani).getTime();
-                if (scheduleTime <= nowTime) return true;
+                const scheduleTime = parseSheetDate(c.sonraki_arama_zamani);
+                if (scheduleTime && scheduleTime <= nowTime) return true;
             }
 
             // 2. New
@@ -461,8 +485,8 @@ export async function getLeadStats() {
         // 1. Scheduled
         if (durum === 'Daha sonra aranmak istiyor') {
             if (sonraki_arama) {
-                const scheduleTime = new Date(sonraki_arama).getTime();
-                if (scheduleTime <= nowTime) {
+                const scheduleTime = parseSheetDate(sonraki_arama);
+                if (scheduleTime && scheduleTime <= nowTime) {
                     waiting_scheduled++;
                     isAvailable = true;
                 }

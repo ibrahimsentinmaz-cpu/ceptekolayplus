@@ -911,6 +911,8 @@ function ApprovalSummaryModal({ isOpen, onClose, customer }: { isOpen: boolean; 
 *Gizli Dosyası :* ${customer.gizli_dosya_varmi || '-'} ${customer.gizli_dosya_detay || ''}
 *Açık icrası :* ${customer.acik_icra_varmi || '-'} ${customer.acik_icra_detay || ''}
 *Kapalı icra :* ${customer.kapali_icra_varmi || '-'} Açıklama: ${customer.kapali_icra_kapanis_sekli || ''}
+*Tapu Var mı :* ${customer.tapu_varmi || '-'}
+*Araç Var mı :* ${customer.arac_varmi || '-'}
 *Avukat Sorgusu :* ${customer.avukat_sorgu_durumu || '-'} Açıklaması ${customer.avukat_sorgu_sonuc || ''}`;
 
         // Satıcı Notu Ekleme
