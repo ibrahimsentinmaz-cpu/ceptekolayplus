@@ -119,21 +119,30 @@ function customerToRow(c: Partial<Customer>): any[] {
 function parseSheetDate(dateStr: string | undefined): number | null {
     if (!dateStr) return null;
 
+    // Trim
+    let cleanStr = dateStr.trim();
+    if (!cleanStr) return null;
+
     // 1. Try standard Date parsing (ISO 8601, etc.)
-    const d = new Date(dateStr);
+    const d = new Date(cleanStr);
     if (!isNaN(d.getTime())) return d.getTime();
 
-    // 2. Try DD.MM.YYYY HH:mm format (Common in TR Sheets)
-    // Regex: (\d{1,2})[./](\d{1,2})[./](\d{4})(?:\s+(\d{1,2}):(\d{2}))?
-    const trMatch = dateStr.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+    // 2. Try DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
+    // Supports optional time: HH:mm or HH:mm:ss
+    // Regex: ^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?
+    const trMatch = cleanStr.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+
     if (trMatch) {
         const day = parseInt(trMatch[1], 10);
         const month = parseInt(trMatch[2], 10) - 1; // Months are 0-indexed
         const year = parseInt(trMatch[3], 10);
         const hour = trMatch[4] ? parseInt(trMatch[4], 10) : 0;
         const minute = trMatch[5] ? parseInt(trMatch[5], 10) : 0;
+        // We ignore seconds for parsing basic date object usually, or use them if needed. 
+        // Date constructor supports (year, month, index, hour, minute, second)
+        const second = trMatch[6] ? parseInt(trMatch[6], 10) : 0;
 
-        const d2 = new Date(year, month, day, hour, minute);
+        const d2 = new Date(year, month, day, hour, minute, second);
         if (!isNaN(d2.getTime())) return d2.getTime();
     }
 
