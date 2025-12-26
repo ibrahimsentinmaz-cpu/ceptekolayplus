@@ -66,7 +66,12 @@ export default function ReportsPage() {
     if (!stats) return <div className="p-8 text-center text-gray-500">Veri yok.</div>;
 
     // Charts Data Preparation
-    const statusData = Object.entries(stats.status || {}).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    // Status - Top 5 Only
+    const statusData = Object.entries(stats.status || {})
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5); // Limit to Top 5
+
     const channelData = Object.entries(stats.channel || {}).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
     // Profession (Top 10)
@@ -126,14 +131,14 @@ export default function ReportsPage() {
             </div>
 
             {/* --- ROW 1: EXECUTIVE KPIs --- */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8 auto-rows-fr">
                 <KpiCard label="Toplam Başvuru" value={stats.funnel.total} icon={Users} color="blue" />
                 <KpiCard label="Bugüne Kadar Aranan" value={stats.totalCalled} icon={Phone} color="indigo" />
-                <KpiCard label="Bugün Aranan" value={stats.todayCalled} icon={Phone} color="cyan" highlight />
+                <KpiCard label="Bugün Aranan" value={stats.todayCalled} icon={Phone} color="cyan" />
                 <KpiCard label="Kalan Aranacak" value={stats.remainingToCall} icon={ClipboardList} color="amber" />
 
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">En Çok İstenen</span>
+                <div className="bg-white p-4 rounded-xl shadow-sm border-2 border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow h-full">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">En Çok İstenen</span>
                     <div className="mt-1 font-bold text-gray-800 text-sm truncate" title={productData[0]?.[0]}>
                         {productData[0]?.[0] || '-'}
                     </div>
@@ -142,7 +147,7 @@ export default function ReportsPage() {
                 <KpiCard label="Satış Oranı %" value={`%${salesRate}`} icon={TrendingUp} color="emerald" subtext="(Aranan)" />
 
                 {/* Clickable Delivered */}
-                <div onClick={() => router.push('/dashboard/delivery-reports')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95 relative group print:hover:scale-100">
+                <div onClick={() => router.push('/dashboard/delivery-reports')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95 relative group print:hover:scale-100 h-full">
                     <div className="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity" />
                     <KpiCard label="Teslim Edilen" value={stats.totalDelivered} icon={Package} color="green" />
                 </div>
@@ -169,22 +174,28 @@ export default function ReportsPage() {
                 {/* Hourly Intensity Heatmap */}
                 <ChartCard title="Saatlik Çalışma Yoğunluğu" className="lg:col-span-2">
                     <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={hourlyData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                                <XAxis dataKey="hour" tick={{ fill: '#9CA3AF', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <YAxis hide />
-                                <RechartsTooltip
-                                    cursor={{ fill: '#F3F4F6' }}
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={20}>
-                                    {hourlyData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fillOpacity={0.6 + (entry.count / (Math.max(...hourlyData.map(h => h.count)) || 1)) * 0.4} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {stats.hourly && Object.values(stats.hourly).some(v => v > 0) ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={hourlyData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                                    <XAxis dataKey="hour" tick={{ fill: '#9CA3AF', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                    <YAxis hide />
+                                    <RechartsTooltip
+                                        cursor={{ fill: '#F3F4F6' }}
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={20}>
+                                        {hourlyData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fillOpacity={0.6 + (entry.count / (Math.max(...hourlyData.map(h => h.count)) || 1)) * 0.4} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-gray-400 text-sm">
+                                Henüz saatlik veri oluşmadı. (Aramalar başladıkça dolacaktır)
+                            </div>
+                        )}
                     </div>
                     <p className="text-xs text-gray-400 text-center mt-2">Gün içindeki arama ve işlem yoğunluğu (00:00 - 23:00)</p>
                 </ChartCard>
@@ -193,7 +204,7 @@ export default function ReportsPage() {
                 <ChartCard title="30 Günlük Trend">
                     <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={dailyData}>
+                            <AreaChart data={dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
@@ -201,10 +212,22 @@ export default function ReportsPage() {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                                <XAxis dataKey="date" hide />
-                                <YAxis hide />
+                                <XAxis
+                                    dataKey="date"
+                                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                                    interval="preserveStartEnd"
+                                />
+                                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
                                 <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none' }} />
-                                <Area type="monotone" dataKey="count" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorTrend)" strokeWidth={3} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="count"
+                                    stroke="#8B5CF6"
+                                    fillOpacity={1}
+                                    fill="url(#colorTrend)"
+                                    strokeWidth={3}
+                                    activeDot={{ r: 6 }}
+                                />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -223,7 +246,7 @@ export default function ReportsPage() {
                                     dataKey="name"
                                     type="category"
                                     width={100}
-                                    tick={{ fontSize: 11, fill: '#4B5563' }}
+                                    tick={{ fontSize: 10, fill: '#4B5563' }}
                                     axisLine={false}
                                     tickLine={false}
                                 />
@@ -246,6 +269,8 @@ export default function ReportsPage() {
                                     outerRadius={80}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    label={({ name, value, percent }) => `${name} (${value})`}
+                                    labelLine={false}
                                 >
                                     {channelData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
@@ -265,8 +290,8 @@ export default function ReportsPage() {
                     </div>
                 </ChartCard>
 
-                {/* Status Donut */}
-                <ChartCard title="Dosya Durumu">
+                {/* Status Donut - Top 5 Only */}
+                <ChartCard title="Dosya Durumu (Top 5)">
                     <div className="h-[250px] flex items-center justify-center">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -277,6 +302,7 @@ export default function ReportsPage() {
                                     outerRadius={80}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    label={({ name, value }) => value > 0 ? value : ''}
                                 >
                                     {statusData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} strokeWidth={0} />
@@ -287,8 +313,8 @@ export default function ReportsPage() {
                         </ResponsiveContainer>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2 mt-2">
-                        {statusData.slice(0, 3).map((e, i) => (
-                            <span key={i} className="text-xs text-gray-500 flex items-center gap-1">
+                        {statusData.map((e, i) => (
+                            <span key={i} className="text-[10px] text-gray-500 flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[(i + 4) % COLORS.length] }}></span>
                                 {e.name}
                             </span>
@@ -309,23 +335,35 @@ export default function ReportsPage() {
 
 // --- COMPONENTS ---
 
-function KpiCard({ label, value, icon: Icon, color, subtext, highlight }: any) {
+// Updated KpiCard with colored borders for ALL
+function KpiCard({ label, value, icon: Icon, color, subtext }: any) {
     const colors: any = {
-        blue: 'text-blue-600 bg-blue-50 border-blue-100',
-        indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
-        cyan: 'text-cyan-600 bg-cyan-50 border-cyan-100',
-        amber: 'text-amber-600 bg-amber-50 border-amber-100',
-        emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-        green: 'text-green-600 bg-green-50 border-green-100',
-        purple: 'text-purple-600 bg-purple-50 border-purple-100',
+        blue: 'text-blue-600 bg-blue-50 border-blue-200',
+        indigo: 'text-indigo-600 bg-indigo-50 border-indigo-200',
+        cyan: 'text-cyan-600 bg-cyan-50 border-cyan-200',
+        amber: 'text-amber-600 bg-amber-50 border-amber-200',
+        emerald: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        green: 'text-green-600 bg-green-50 border-green-200',
+        purple: 'text-purple-600 bg-purple-50 border-purple-200',
     };
-    const theme = colors[color] || colors.blue;
+
+    // Default fallback
+    const themeClass = colors[color] || colors.blue;
+
+    // Extract border color for the card container
+    // The previous implementation used 'theme' for the ICON container, which is fine.
+    // We want the border on the main div.
+
+    const borderColor = themeClass.split(' ').find((c: string) => c.startsWith('border-')) || 'border-gray-200';
 
     return (
-        <div className={`bg-white p-4 rounded-xl shadow-sm border flex flex-col justify-between hover:shadow-md transition-all ${theme.split(' ').pop()} ${highlight ? 'ring-2 ring-cyan-400 shadow-cyan-100' : ''}`}>
+        <div className={`bg-white p-4 rounded-xl shadow-sm border-2 flex flex-col justify-between hover:shadow-md transition-all h-full ${borderColor}`}>
             <div className="flex justify-between items-start">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-                <Icon className={`w-4 h-4 ${theme.split(' ')[0]}`} />
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</span>
+                <div className={`p-1.5 rounded-lg ${themeClass.replace(/border-\w+-\d+/, '')}`}>
+                    {/* remove border from icon container to avoid double border visual if any */}
+                    <Icon className="w-4 h-4" />
+                </div>
             </div>
             <div className="mt-2">
                 <span className="text-2xl font-bold text-gray-900">{value}</span>
