@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-    PieChart, Pie, Cell
+    PieChart, Pie, Cell, AreaChart, Area, LineChart, Line
 } from 'recharts';
 import {
     Loader2, ArrowLeft, Users, Phone,
-    Package, CheckCircle, Share2, ClipboardList, TrendingUp
+    Package, CheckCircle, Share2, ClipboardList, TrendingUp, Clock, Activity, Download
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -29,6 +29,7 @@ interface ReportStats {
     status: Record<string, number>;
     channel: Record<string, number>;
     daily: Record<string, number>;
+    hourly: Record<string, number>; // New
     funnel: {
         total: number;
         sale: number;
@@ -67,295 +68,264 @@ export default function ReportsPage() {
     // Charts Data Preparation
     const statusData = Object.entries(stats.status || {}).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
     const channelData = Object.entries(stats.channel || {}).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-    // City - Filter out empty/invalid
-    const cityData = Object.entries(stats.city || {})
-        .filter(([name]) => name && name !== 'Belirsiz')
-        .sort((a, b) => b[1].total - a[1].total)
-        .slice(0, 10)
-        .map(([name, data]) => ({ name, count: data.total }));
-    // Profession - Filter out empty/invalid
+
+    // Profession (Top 10)
     const professionData = Object.entries(stats.profession || {})
         .filter(([name, d]) => d.count > 0 && name && name !== 'Diğer' && name !== 'Bilinmiyor' && name.trim() !== '')
-        .map(([name, d]) => ({ name, count: d.count, income: d.avgIncome }))
+        .map(([name, d]) => ({ name, count: d.count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
+
     const productData = Object.entries(stats.product || {}).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-    // Sales Rate (Delivered / Called)
-    // User Request: "Satış oranını hesaplamasını toplam arananlara göre yapalım"
+    // Hourly Data (0-23)
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+        hour: `${String(i).padStart(2, '0')}:00`,
+        count: stats.hourly?.[i] || 0
+    }));
+
+    // Daily Trend
+    const dailyData = Object.entries(stats.daily || {}).map(([date, count]) => ({ date, count }));
+
+    // Sales Rate
     const salesRate = stats.totalCalled > 0
         ? ((stats.totalDelivered / stats.totalCalled) * 100).toFixed(1)
         : '0';
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 md:p-8 pb-20 print:bg-white print:p-0">
+        <div className="min-h-screen bg-gray-50/50 p-6 md:p-8 pb-20 print:bg-white print:p-0">
             {/* Header */}
             <div className="flex justify-between items-center mb-8 print:hidden">
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" onClick={() => router.back()}>
+                    <Button variant="outline" onClick={() => router.back()} className="hover:bg-gray-100">
                         <ArrowLeft className="w-4 h-4 mr-2" /> Geri
                     </Button>
-                    <h1 className="text-2xl font-bold text-gray-900">Yönetici Raporları</h1>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Yönetici Paneli</h1>
+                        <p className="text-sm text-gray-500">Performans ve Operasyonel Metrikler</p>
+                    </div>
                 </div>
-                <Button onClick={handlePrint} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Button onClick={handlePrint} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
                     <Share2 className="w-4 h-4 mr-2" />
-                    PDF Paylaş
+                    PDF Olarak İndir
                 </Button>
             </div>
 
-            {/* TOP METRICS ROW (Single Line if possible, or grid) */}
+            {/* PRINT HEADER (Visible only on print) */}
+            <div className="hidden print:block mb-8 border-b pb-4">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Yönetici Raporu</h1>
+                        <p className="text-gray-500 mt-1">CepteKolay+ Operasyon Analizi</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-sm text-gray-400">Rapor Tarihi</p>
+                        <p className="font-semibold text-gray-800">{new Date().toLocaleDateString('tr-TR')}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- ROW 1: EXECUTIVE KPIs --- */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
-                {/* 1. Total Applications */}
                 <KpiCard label="Toplam Başvuru" value={stats.funnel.total} icon={Users} color="blue" />
-
-                {/* 2. Called To Date */}
                 <KpiCard label="Bugüne Kadar Aranan" value={stats.totalCalled} icon={Phone} color="indigo" />
-
-                {/* 3. Today Called */}
-                <KpiCard label="Bugün Aranan" value={stats.todayCalled} icon={Phone} color="cyan" />
-
-                {/* 4. Remaining */}
+                <KpiCard label="Bugün Aranan" value={stats.todayCalled} icon={Phone} color="cyan" highlight />
                 <KpiCard label="Kalan Aranacak" value={stats.remainingToCall} icon={ClipboardList} color="amber" />
 
-                {/* 5. Top Product */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <span className="text-xs font-medium text-gray-500">En Çok İstenen</span>
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">En Çok İstenen</span>
                     <div className="mt-1 font-bold text-gray-800 text-sm truncate" title={productData[0]?.[0]}>
                         {productData[0]?.[0] || '-'}
                     </div>
                 </div>
 
-                {/* 6. Sales Rate (Delivered / Called) */}
                 <KpiCard label="Satış Oranı %" value={`%${salesRate}`} icon={TrendingUp} color="emerald" subtext="(Aranan)" />
 
-                {/* 7. Delivered */}
-                {/* 7. Delivered - CLICKABLE LINK TO REPORT */}
-                <div onClick={() => router.push('/dashboard/delivery-reports')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95 relative group">
-                    <div className="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-10 rounded-xl transition-opacity" />
+                {/* Clickable Delivered */}
+                <div onClick={() => router.push('/dashboard/delivery-reports')} className="cursor-pointer transition-transform hover:scale-105 active:scale-95 relative group print:hover:scale-100">
+                    <div className="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity" />
                     <KpiCard label="Teslim Edilen" value={stats.totalDelivered} icon={Package} color="green" />
                 </div>
             </div>
 
-            {/* CHARTS GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:grid print:grid-cols-2 print:gap-4 mb-8 break-inside-avoid page-break-inside-avoid">
-
-                {/* 1. Dosya Durumu Dağılımı */}
-                <ChartCard title="Dosya Durumu Dağılımı">
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={statusData}
-                                cx="50%" cy="50%"
-                                innerRadius={60} outerRadius={100}
-                                paddingAngle={2}
-                                dataKey="value"
-                                label={({ name, value, percent }) => `${name}: ${value} (%${((percent || 0) * 100).toFixed(0)})`}
-                            >
-                                {statusData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <RechartsTooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-4 flex flex-wrap justify-center gap-3">
-                        {statusData.slice(0, 5).map((entry, index) => (
-                            <div key={index} className="flex items-center gap-1 text-xs text-gray-600">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                {entry.name}: {entry.value}
-                            </div>
-                        ))}
-                    </div>
-                </ChartCard>
-
-                {/* 2. Başvuru Kanalı Dağılımı */}
-                <ChartCard title="Başvuru Kanalı Dağılımı">
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={channelData}
-                                cx="50%" cy="50%"
-                                innerRadius={60} outerRadius={100}
-                                paddingAngle={2}
-                                dataKey="value"
-                                label={({ name, value, percent }) => `${name}: ${value} (%${((percent || 0) * 100).toFixed(0)})`}
-                            >
-                                {channelData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <RechartsTooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-4 flex flex-wrap justify-center gap-3">
-                        {channelData.slice(0, 5).map((entry, index) => (
-                            <div key={index} className="flex items-center gap-1 text-xs text-gray-600">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[(index + 4) % COLORS.length] }}></div>
-                                {entry.name}: {entry.value}
-                            </div>
-                        ))}
-                    </div>
-                </ChartCard>
-
-
-
-                {/* TREND & PROFESSION GRID */}
-                <div className="grid grid-cols-1 gap-8 mb-8 break-inside-avoid">
-                    {/* 3. Daily Trend */}
-                    <ChartCard title="Son 30 Günlük Başvuru Trendi">
-                        <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={Object.entries(stats?.daily || {}).map(([date, count]) => ({ date, count }))}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                                    <XAxis
-                                        dataKey="date"
-                                        tick={{ fill: '#6B7280', fontSize: 10 }}
-                                        tickMargin={10}
-                                        minTickGap={20}
-                                    />
-                                    <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                    <RechartsTooltip
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        cursor={{ fill: '#F9FAFB' }}
-                                    />
-                                    <Bar
-                                        dataKey="count"
-                                        fill="#6366F1"
-                                        radius={[4, 4, 0, 0]}
-                                        name="Başvuru"
-                                        barSize={40} // Thicker bars
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </ChartCard>
-
-                    {/* 4. Profession Distribution */}
-                    <ChartCard title="Meslek Dağılımı (Top 10)">
-                        <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={professionData} margin={{ top: 10, bottom: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                                    <XAxis
-                                        dataKey="name"
-                                        tick={{ fill: '#4B5563', fontSize: 10, fontWeight: 500 }}
-                                        interval={0}
-                                        angle={-25}
-                                        textAnchor="end"
-                                        height={60}
-                                        tickMargin={5}
-                                    />
-                                    <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                    <RechartsTooltip
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        cursor={{ fill: '#E5E7EB', opacity: 0.4 }}
-                                    />
-                                    <Bar
-                                        dataKey="count"
-                                        fill="#EC4899"
-                                        radius={[4, 4, 0, 0]}
-                                        name="Kişi"
-                                        barSize={40}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </ChartCard>
+            {/* --- ROW 2: CITY ANALYSIS GRIDS --- */}
+            <div className="mb-8 break-inside-avoid">
+                <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-indigo-600" />
+                    İl Bazlı Performans Özetleri (Top 5)
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <CityMiniTable title="Hacim" data={stats.city} sortKey="total" color="blue" />
+                    <CityMiniTable title="Teslimat" data={stats.city} sortKey="delivered" color="emerald" showPercent />
+                    <CityMiniTable title="E-Devlet Yok" data={stats.city} sortKey="noEdevlet" color="red" showPercent />
+                    <CityMiniTable title="Ulaşılamayan" data={stats.city} sortKey="unreachable" color="orange" showPercent />
+                    <CityMiniTable title="Kefil" data={stats.city} sortKey="kefil" color="purple" showPercent />
+                    <CityMiniTable title="İptal" data={stats.city} sortKey="cancelled" color="gray" showPercent />
                 </div>
-
-                {/* --- Detailed City Analysis Grid (Top 10s) --- */}
-                <div className="mb-8">
-                    <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                        <ClipboardList className="w-5 h-5 text-indigo-600" />
-                        Detaylı İl Bazlı Analizler (Top 10)
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* 1. Başvuru Hacmi */}
-                        <CityMetricTable
-                            title="Başvuru Hacmi En Yüksek"
-                            data={stats?.city}
-                            sortKey="total"
-                            color="blue"
-                        />
-
-                        {/* 2. Teslimat Başarısı */}
-                        <CityMetricTable
-                            title="En Çok Teslimat Yapılan"
-                            data={stats?.city}
-                            sortKey="delivered"
-                            color="emerald"
-                            showPercent
-                        />
-
-                        {/* 3. E-Devlet Sorunu */}
-                        <CityMetricTable
-                            title="E-Devlet Vermeyenler"
-                            data={stats?.city}
-                            sortKey="noEdevlet"
-                            color="red"
-                            showPercent
-                        />
-
-                        {/* 4. Ulaşılamayanlar */}
-                        <CityMetricTable
-                            title="En Çok Ulaşılamayan"
-                            data={stats?.city}
-                            sortKey="unreachable"
-                            color="orange"
-                            showPercent
-                        />
-
-                        {/* 5. Kefil Bekleyenler */}
-                        <CityMetricTable
-                            title="Kefil İstenen / Bekleyen"
-                            data={stats?.city}
-                            sortKey="kefil"
-                            color="purple"
-                            showPercent
-                        />
-
-                        {/* 6. İptal / Vazgeçenler */}
-                        <CityMetricTable
-                            title="İptal / Vazgeçenler"
-                            data={stats?.city}
-                            sortKey="cancelled"
-                            color="gray"
-                            showPercent
-                        />
-                    </div>
-                </div>
-
-
             </div>
 
-            {/* Print Footer */}
-            <div className="hidden print:block text-center mt-12 text-sm text-gray-500">
-                CepteKolay+ Raporu - {new Date().toLocaleDateString('tr-TR')}
+            {/* --- ROW 3: OPERATION RHYTHM (HOURLY + TREND) --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 break-inside-avoid">
+                {/* Hourly Intensity Heatmap */}
+                <ChartCard title="Saatlik Çalışma Yoğunluğu" className="lg:col-span-2">
+                    <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={hourlyData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                                <XAxis dataKey="hour" tick={{ fill: '#9CA3AF', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <YAxis hide />
+                                <RechartsTooltip
+                                    cursor={{ fill: '#F3F4F6' }}
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                />
+                                <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={20}>
+                                    {hourlyData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fillOpacity={0.6 + (entry.count / (Math.max(...hourlyData.map(h => h.count)) || 1)) * 0.4} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <p className="text-xs text-gray-400 text-center mt-2">Gün içindeki arama ve işlem yoğunluğu (00:00 - 23:00)</p>
+                </ChartCard>
+
+                {/* Daily Trend Area */}
+                <ChartCard title="30 Günlük Trend">
+                    <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={dailyData}>
+                                <defs>
+                                    <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                                <XAxis dataKey="date" hide />
+                                <YAxis hide />
+                                <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none' }} />
+                                <Area type="monotone" dataKey="count" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorTrend)" strokeWidth={3} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </ChartCard>
+            </div>
+
+            {/* --- ROW 4: DEMOGRAPHICS & DISTRIBUTION --- */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 break-inside-avoid">
+                {/* Profession Bar */}
+                <ChartCard title="Meslek Dağılımı (Top 10)" className="md:col-span-1">
+                    <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={professionData} layout="vertical" margin={{ left: 0, right: 20 }}>
+                                <XAxis type="number" hide />
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    width={100}
+                                    tick={{ fontSize: 11, fill: '#4B5563' }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <RechartsTooltip cursor={{ fill: 'transparent' }} />
+                                <Bar dataKey="count" fill="#EC4899" radius={[0, 4, 4, 0]} barSize={16} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </ChartCard>
+
+                {/* Channel Donut */}
+                <ChartCard title="Başvuru Kanalı">
+                    <div className="h-[250px] flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={channelData}
+                                    cx="50%" cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {channelData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
+                                    ))}
+                                </Pie>
+                                <RechartsTooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-2 mt-2">
+                        {channelData.slice(0, 3).map((e, i) => (
+                            <span key={i} className="text-xs text-gray-500 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
+                                {e.name}
+                            </span>
+                        ))}
+                    </div>
+                </ChartCard>
+
+                {/* Status Donut */}
+                <ChartCard title="Dosya Durumu">
+                    <div className="h-[250px] flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={statusData}
+                                    cx="50%" cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {statusData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} strokeWidth={0} />
+                                    ))}
+                                </Pie>
+                                <RechartsTooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-2 mt-2">
+                        {statusData.slice(0, 3).map((e, i) => (
+                            <span key={i} className="text-xs text-gray-500 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[(i + 4) % COLORS.length] }}></span>
+                                {e.name}
+                            </span>
+                        ))}
+                    </div>
+                </ChartCard>
+            </div>
+
+            {/* Footer Signature */}
+            <div className="mt-12 pt-8 border-t border-gray-200 text-center text-gray-400 text-xs hidden print:block">
+                Bu rapor sistem tarafından {new Date().toLocaleString('tr-TR')} tarihinde oluşturulmuştur.
+                <br />
+                CepteKolay+ Yönetim Sistemi
             </div>
         </div>
     );
 }
 
-// Helpers
-function KpiCard({ label, value, icon: Icon, color, subtext }: any) {
+// --- COMPONENTS ---
+
+function KpiCard({ label, value, icon: Icon, color, subtext, highlight }: any) {
     const colors: any = {
-        blue: 'text-blue-600 bg-blue-50',
-        indigo: 'text-indigo-600 bg-indigo-50',
-        cyan: 'text-cyan-600 bg-cyan-50',
-        amber: 'text-amber-600 bg-amber-50',
-        emerald: 'text-emerald-600 bg-emerald-50',
-        green: 'text-green-600 bg-green-50',
-        purple: 'text-purple-600 bg-purple-50',
+        blue: 'text-blue-600 bg-blue-50 border-blue-100',
+        indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+        cyan: 'text-cyan-600 bg-cyan-50 border-cyan-100',
+        amber: 'text-amber-600 bg-amber-50 border-amber-100',
+        emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+        green: 'text-green-600 bg-green-50 border-green-100',
+        purple: 'text-purple-600 bg-purple-50 border-purple-100',
     };
     const theme = colors[color] || colors.blue;
 
     return (
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className={`bg-white p-4 rounded-xl shadow-sm border flex flex-col justify-between hover:shadow-md transition-all ${theme.split(' ').pop()} ${highlight ? 'ring-2 ring-cyan-400 shadow-cyan-100' : ''}`}>
             <div className="flex justify-between items-start">
-                <span className="text-xs font-medium text-gray-500">{label}</span>
-                <div className={`p-1.5 rounded-lg ${theme}`}>
-                    <Icon className="w-4 h-4" />
-                </div>
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
+                <Icon className={`w-4 h-4 ${theme.split(' ')[0]}`} />
             </div>
             <div className="mt-2">
                 <span className="text-2xl font-bold text-gray-900">{value}</span>
@@ -365,20 +335,22 @@ function KpiCard({ label, value, icon: Icon, color, subtext }: any) {
     );
 }
 
-function ChartCard({ title, children }: { title: string, children: React.ReactNode }) {
+function ChartCard({ title, children, className }: { title: string, children: React.ReactNode, className?: string }) {
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 break-inside-avoid">
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">{title}</h3>
-            {children}
+        <div className={`bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col ${className}`}>
+            <h3 className="text-base font-semibold text-gray-800 mb-4">{title}</h3>
+            <div className="flex-1 min-h-0">
+                {children}
+            </div>
         </div>
     );
 }
 
-function CityMetricTable({ title, data, sortKey, color, showPercent }: {
+function CityMiniTable({ title, data, sortKey, color, showPercent }: {
     title: string;
     data: any;
     sortKey: string;
-    color: 'blue' | 'emerald' | 'red' | 'orange' | 'purple' | 'gray';
+    color: string;
     showPercent?: boolean;
 }) {
     if (!data) return null;
@@ -387,9 +359,9 @@ function CityMetricTable({ title, data, sortKey, color, showPercent }: {
         .map(([name, stats]: [string, any]) => ({ name, ...stats }))
         .filter(c => c[sortKey] > 0)
         .sort((a, b) => b[sortKey] - a[sortKey])
-        .slice(0, 10);
+        .slice(0, 5); // STRICTLY TOP 5
 
-    const colors = {
+    const colorClasses: any = {
         blue: 'text-blue-700 bg-blue-50',
         emerald: 'text-emerald-700 bg-emerald-50',
         red: 'text-red-700 bg-red-50',
@@ -399,40 +371,28 @@ function CityMetricTable({ title, data, sortKey, color, showPercent }: {
     };
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden break-inside-avoid">
-            <div className={`px-4 py-3 border-b border-gray-100 font-semibold text-sm ${colors[color]}`}>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden text-sm">
+            <div className={`px-3 py-2 font-semibold text-xs uppercase tracking-wider ${colorClasses[color] || 'bg-gray-50'}`}>
                 {title}
             </div>
-            <div className="p-0">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500 font-medium">
-                        <tr>
-                            <th className="px-4 py-2">Şehir</th>
-                            <th className="px-4 py-2 text-right">Adet</th>
-                            {showPercent && <th className="px-4 py-2 text-right text-xs">%</th>}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {sorted.length === 0 ? (
-                            <tr><td colSpan={3} className="px-4 py-4 text-center text-gray-400 text-xs">Veri yok</td></tr>
-                        ) : sorted.map((city, idx) => (
-                            <tr key={city.name} className="hover:bg-gray-50/50">
-                                <td className="px-4 py-2 text-gray-700 truncate max-w-[120px]" title={city.name}>
-                                    <span className="text-gray-400 text-xs mr-2 w-4 inline-block">{idx + 1}.</span>
-                                    {city.name}
-                                </td>
-                                <td className={'px-4 py-2 text-right font-medium ' + colors[color].split(' ')[0]}>
-                                    {city[sortKey]}
-                                </td>
-                                {showPercent && (
-                                    <td className="px-4 py-2 text-right text-xs text-gray-400">
-                                        {city.total > 0 ? '%' + Math.round((city[sortKey] / city.total) * 100) : '-'}
-                                    </td>
-                                )}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="divide-y divide-gray-100">
+                {sorted.length === 0 ? (
+                    <div className="p-3 text-center text-gray-400 text-xs">Veri yok</div>
+                ) : sorted.map((city, idx) => (
+                    <div key={city.name} className="px-3 py-2 flex justify-between items-center hover:bg-gray-50/50">
+                        <span className="truncate flex-1 text-gray-600 font-medium" title={city.name}>
+                            {idx + 1}. {city.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-800">{city[sortKey]}</span>
+                            {showPercent && (
+                                <span className="text-[10px] text-gray-400 w-8 text-right">
+                                    {city.total > 0 ? '%' + Math.round((city[sortKey] / city.total) * 100) : '-'}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

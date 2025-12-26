@@ -431,6 +431,7 @@ export async function getLeadStats() {
     const todayStr = trFormatter.format(new Date());
 
     const statusCounts: Record<string, number> = {};
+    const hourly: Record<number, number> = {}; // 0-23
 
     // Loop through RAW rows for max speed
     for (const row of rows) {
@@ -447,19 +448,19 @@ export async function getLeadStats() {
             statusCounts[durum] = (statusCounts[durum] || 0) + 1;
         }
 
-        // Today Called
+        // Today Called & Hourly Stats
         if (son_arama) {
             let lastCallDate = '';
-            // Fast date check
-            if (son_arama.length === 10 && son_arama.includes('-')) {
-                // assume yyyy-mm-dd check
-                if (son_arama.startsWith(todayStr)) lastCallDate = todayStr;
-            } else {
-                // Fallback parsing
-                const date = new Date(son_arama);
-                if (!isNaN(date.getTime())) {
-                    lastCallDate = trFormatter.format(date);
-                }
+            // Fast date parsing using our helper for reliability
+            const ts = parseSheetDate(son_arama);
+
+            if (ts) {
+                const d = new Date(ts);
+                lastCallDate = trFormatter.format(d);
+
+                // Hourly Stat
+                const hour = d.getHours();
+                hourly[hour] = (hourly[hour] || 0) + 1;
             }
 
             if (lastCallDate === todayStr) {
@@ -548,7 +549,8 @@ export async function getLeadStats() {
         delivered,
         approved, // Use the explicit counter, NOT statusCounts['Onaylandı']
         today_called,
-        statusCounts
+        statusCounts,
+        hourly
     };
 }
 
