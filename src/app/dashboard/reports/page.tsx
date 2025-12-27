@@ -28,6 +28,7 @@ interface ReportStats {
     product: Record<string, number>;
     status: Record<string, number>;
     channel: Record<string, number>;
+    rejection: Record<string, number>;
     daily: Record<string, number>;
     hourly: Record<string, Record<number, number>>; // Date keys -> Hour keys -> Count
     funnel: {
@@ -350,6 +351,30 @@ export default function ReportsPage() {
                                 {e.name}
                             </span>
                         ))}
+                    </div>
+                </ChartCard>
+            </div>
+
+            {/* --- ROW 5: REJECTION / CANCELLATION ANALYSIS --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 break-inside-avoid">
+                <ChartCard title="Ret ve İptal Nedenleri" className="md:col-span-2">
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={Object.entries(stats.rejection || {}).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)} layout="horizontal" margin={{ bottom: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF6FF" />
+                                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6B7280' }} interval={0} angle={-15} textAnchor="end" />
+                                <YAxis hide />
+                                <RechartsTooltip
+                                    cursor={{ fill: '#F9FAFB' }}
+                                    contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                />
+                                <Bar dataKey="value" fill="#EF4444" radius={[4, 4, 0, 0]} barSize={40}>
+                                    {Object.entries(stats.rejection || {}).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry[0].includes('İptal') || entry[0] === 'Fiyat Yüksek' ? '#F59E0B' : '#EF4444'} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </ChartCard>
             </div>

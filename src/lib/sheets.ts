@@ -63,7 +63,18 @@ export const COLUMNS = [
     'SKIP_BG', 'SKIP_BH', 'SKIP_BI', 'SKIP_BJ', 'SKIP_BK', 'SKIP_BL', 'SKIP_BM', 'SKIP_BN', 'SKIP_BO', 'SKIP_BP',
     'SKIP_BQ', 'SKIP_BR', 'SKIP_BS', 'SKIP_BT', 'SKIP_BU', 'SKIP_BV', 'SKIP_BW', 'SKIP_BX', 'SKIP_BY', 'SKIP_BZ',
     'SKIP_CA', 'SKIP_CB', 'SKIP_CC',
-    'ilce'
+    'ilce', // Column CD (Index 81)
+    // Padding to reach Column DM (Index 116)
+    // We need 116 - 81 = 35 more skips? No.
+    // Current 'ilce' is 81.
+    // We need indices 82..115 to be skips.
+    // Target 'iptal_nedeni' is at 116.
+    'SKIP_CE', 'SKIP_CF', 'SKIP_CG', 'SKIP_CH', 'SKIP_CI', 'SKIP_CJ', 'SKIP_CK', 'SKIP_CL', 'SKIP_CM', 'SKIP_CN',
+    'SKIP_CO', 'SKIP_CP', 'SKIP_CQ', 'SKIP_CR', 'SKIP_CS', 'SKIP_CT', 'SKIP_CU', 'SKIP_CV', 'SKIP_CW', 'SKIP_CX',
+    'SKIP_CY', 'SKIP_CZ',
+    'SKIP_DA', 'SKIP_DB', 'SKIP_DC', 'SKIP_DD', 'SKIP_DE', 'SKIP_DF', 'SKIP_DG', 'SKIP_DH', 'SKIP_DI', 'SKIP_DJ',
+    'SKIP_DK', 'SKIP_DL',
+    'iptal_nedeni' // Column DM (Index 116)
 ] as const;
 // Total: 72 columns
 

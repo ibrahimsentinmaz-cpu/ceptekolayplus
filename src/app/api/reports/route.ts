@@ -237,7 +237,10 @@ export async function GET(req: NextRequest) {
                 if (approval === 'Reddedildi') reason = 'Yönetici Reddi';
                 else if (status === 'Reddetti') reason = 'Müşteri Reddetti';
                 else if (status === 'Uygun değil') reason = 'Kriter Dışı';
-                else if (status === 'İptal/Vazgeçti') reason = 'İptal/Vazgeçti';
+                else if (status === 'İptal/Vazgeçti') {
+                    // Use the specific reason if available
+                    reason = getColSafe(row, 'iptal_nedeni') || 'İptal/Vazgeçti (Nedensiz)';
+                }
                 stats.rejection[reason] = (stats.rejection[reason] || 0) + 1;
             }
         });

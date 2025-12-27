@@ -115,6 +115,7 @@ export interface Customer {
   gizli_dosya_detay?: string;
   acik_icra_detay?: string;
   email?: string;
+  iptal_nedeni?: string;
 }
 
 export interface LogEntry {

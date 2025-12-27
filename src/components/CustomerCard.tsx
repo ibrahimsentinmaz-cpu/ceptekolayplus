@@ -42,6 +42,17 @@ const YES_NO_OPTIONS = [
     { value: 'Hayır', label: 'Hayır' }
 ];
 
+const CANCELLATION_REASONS = [
+    { value: 'Fiyat Yüksek', label: 'Fiyat Yüksek' },
+    { value: 'İhtiyacı Kalmamış', label: 'İhtiyacı Kalmamış' },
+    { value: 'Yanlışlıkla Başvurmuş', label: 'Yanlışlıkla Başvurmuş' },
+    { value: 'Bilgilerini Paylaşmak İstemedi', label: 'Bilgilerini Paylaşmak İstemedi' },
+    { value: 'Başka Yerden Almış', label: 'Başka Yerden Almış' },
+    { value: 'Mağazamız Uzak Kaldı', label: 'Mağazamız Uzak Kaldı' },
+    { value: 'Ödeme Yöntemlerini Beğenmedi', label: 'Ödeme Yöntemlerini Beğenmedi' },
+    { value: 'Diğer', label: 'Diğer' }
+];
+
 export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCardProps) {
     const [data, setData] = useState<Customer>(initialData);
     const [loading, setLoading] = useState(false);
@@ -437,6 +448,17 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 onChange={(e) => handleChange('durum', e.target.value)}
                                 options={STATUS_OPTIONS}
                             />
+                            {data.durum === 'İptal/Vazgeçti' && (
+                                <Select
+                                    label="İptal Nedeni *"
+                                    value={data.iptal_nedeni || ''}
+                                    onChange={(e) => handleChange('iptal_nedeni', e.target.value)}
+                                    options={[
+                                        { value: '', label: 'Nedeni Seçiniz...' },
+                                        ...CANCELLATION_REASONS
+                                    ]}
+                                />
+                            )}
                             <Input
                                 type="datetime-local"
                                 label="Sonraki Arama Zamanı"
