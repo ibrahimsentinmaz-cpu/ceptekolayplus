@@ -48,14 +48,46 @@ export async function GET() {
         const rows = response.data.values || [];
         const sonAramaIndex = COLUMNS.indexOf('son_arama_zamani');
 
+        const trFormatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Istanbul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const todayStr = trFormatter.format(new Date());
+
         const debugLog = rows.map((row, i) => {
             const raw = row[sonAramaIndex];
             const result = parseSheetDateDebug(raw);
+
+            let hour = null;
+            let dateStr = null;
+            let isToday = false;
+
+            if (result.parsed) {
+                const d = new Date(result.parsed);
+                // Logic from sheets.ts
+                dateStr = trFormatter.format(d);
+                isToday = dateStr === todayStr;
+
+                const hourStr = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Europe/Istanbul',
+                    hour: 'numeric',
+                    hour12: false
+                }).format(d);
+                hour = parseInt(hourStr, 10);
+            }
+
             return {
                 row: i + 2,
                 raw_value: raw,
                 parsed_timestamp: result.parsed,
-                parsed_iso: result.parsed ? new Date(result.parsed).toISOString() : null,
+                logic_check: {
+                    system_today: todayStr,
+                    row_date: dateStr,
+                    is_today: isToday,
+                    extracted_hour: hour
+                },
                 reason: result.reason
             };
         }).filter(item => item.raw_value); // Only show rows with data
