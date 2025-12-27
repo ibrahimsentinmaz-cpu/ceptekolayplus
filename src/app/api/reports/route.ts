@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSheetsClient } from '@/lib/google';
 import { COLUMNS, parseSheetDate } from '@/lib/sheets';
+
 // Helper using Intl for robustness
 const trFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Istanbul',
@@ -12,22 +13,11 @@ const trFormatter = new Intl.DateTimeFormat('en-CA', {
 // Helper to get formatted date safely
 function getDayKey(dateStr?: string) {
     if (!dateStr) return 'Unknown';
-    try {
-        let date = new Date(dateStr);
-        // Handle DD.MM.YYYY
-        if (isNaN(date.getTime()) && dateStr.includes('.')) {
-            const parts = dateStr.split('.');
-            if (parts.length === 3) {
-                // assume dd.mm.yyyy
-                date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            }
-        }
-        if (isNaN(date.getTime())) return 'Invalid Date';
+    // Use parseSheetDate for robust handling
+    const ts = parseSheetDate(dateStr);
+    if (!ts) return 'Invalid Date';
 
-        return trFormatter.format(date);
-    } catch {
-        return 'Invalid Date';
-    }
+    return trFormatter.format(new Date(ts));
 }
 
 export async function GET(req: NextRequest) {
@@ -51,20 +41,15 @@ export async function GET(req: NextRequest) {
 
         // Dynamic Column Mapper
         const getCol = (row: any[], name: string) => {
-            // Find index in header (A1)
-            // If not found, try to look up in hardcoded COLUMNS as backup? 
-            // Better: rely on header row from sheet being accurate now that we have sync.
             const index = headers.indexOf(name);
             return index > -1 ? row[index] : undefined;
         };
 
-        // Fallback for missing headers (if sync wasn't run yet)
-        // If header "durum" is not found, we use strict index from COLUMNS
+        // Fallback for missing headers
         const getColSafe = (row: any[], name: string) => {
             const index = headers.indexOf(name);
             if (index > -1) return row[index];
 
-            // Fallback
             const fallbackIndex = COLUMNS.indexOf(name as any);
             return fallbackIndex > -1 ? row[fallbackIndex] : undefined;
         };
@@ -95,17 +80,15 @@ export async function GET(req: NextRequest) {
             },
             todayCalled: 0,
             todayApproved: 0,
-            totalCalled: 0,        // NEW: "Bugüne kadar arananlar"
-            remainingToCall: 0,    // NEW: "Kalan aranacaklar"
-            totalDelivered: 0,     // NEW: "Teslim edilenler"
-            totalApproved: 0,       // NEW: "Onaylananlar" (for Sales Rate calculation)
-            hourly: {} as Record<number, number> // NEW: Hourly stats
+            totalCalled: 0,
+            remainingToCall: 0,
+            totalDelivered: 0,
+            totalApproved: 0,
+            hourly: {} as Record<string, Record<number, number>> // Date -> Hour -> Count
         };
 
         // Get today's date string in Turkey timezone
         const today = trFormatter.format(new Date());
-        const nowTime = new Date().getTime();
-        const TWO_HOURS = 2 * 60 * 60 * 1000;
 
         rows.forEach(row => {
             stats.funnel.total++;
@@ -119,15 +102,11 @@ export async function GET(req: NextRequest) {
             const channel = getColSafe(row, 'basvuru_kanali');
             const createdAt = getColSafe(row, 'created_at');
             const lastCalled = getColSafe(row, 'son_arama_zamani');
-            const nextCall = getColSafe(row, 'sonraki_arama_zamani');
-            const locked = getColSafe(row, 'kilitli_mi');
-            const owner = getColSafe(row, 'sahip');
+            // const nextCall = getColSafe(row, 'sonraki_arama_zamani'); // unused
+            // const locked = getColSafe(row, 'kilitli_mi'); // unused
+            // const owner = getColSafe(row, 'sahip'); // unused
 
-            // 1. Call Stats (Total Called Logic Update)
-            // User Request: "Total = Called + Remaining"
-            // Definition: 
-            // - Remaining = Yeni OR Aranacak
-            // - Called = Everything else (Processed)
+            // 1. Call Stats
             const isRemaining = status === 'Yeni' || status === 'Aranacak';
 
             if (!isRemaining) {
@@ -141,39 +120,37 @@ export async function GET(req: NextRequest) {
                     stats.todayCalled++;
                 }
 
-                // Hourly Stats
-                try {
-                    // Try parsing
-                    let d: Date | null = null;
-                    // Usually string is "yyyy-mm-dd hh:mm:ss" or ISO
-                    // Date() parses both fine in recent JS environments
-                    d = new Date(lastCalled);
+                // Hourly Stats grouped by Date
+                // Use robust parser
+                const ts = parseSheetDate(lastCalled);
+                if (ts) {
+                    const d = new Date(ts);
 
-                    // Basic check just in case, fall back to regex if needed?
-                    // But date-fns is not imported here to keep it light.
-                    // Given our CustomerCard improvement, formatting should be standard now.
+                    // Format Date Key: YYYY-MM-DD (Turkey Time)
+                    const dateKey = trFormatter.format(d);
 
-                    if (d && !isNaN(d.getTime())) {
-                        const hourStr = new Intl.DateTimeFormat('en-US', {
-                            timeZone: 'Europe/Istanbul',
-                            hour: 'numeric',
-                            hour12: false
-                        }).format(d);
+                    // Extract Hour: 0-23 (Turkey Time)
+                    const hourStr = new Intl.DateTimeFormat('en-US', {
+                        timeZone: 'Europe/Istanbul',
+                        hour: 'numeric',
+                        hour12: false
+                    }).format(d);
 
-                        const h = parseInt(hourStr, 10);
-                        if (!isNaN(h)) {
-                            stats.hourly[h] = (stats.hourly[h] || 0) + 1;
+                    const h = parseInt(hourStr, 10);
+
+                    if (!isNaN(h)) {
+                        if (!stats.hourly[dateKey]) {
+                            stats.hourly[dateKey] = {};
                         }
+                        stats.hourly[dateKey][h] = (stats.hourly[dateKey][h] || 0) + 1;
                     }
-                } catch (e) {
-                    // ignore parse error
                 }
             }
 
             // 2. Approval & Delivery Stats
             const approvalDate = getColSafe(row, 'onay_tarihi');
             if (approval === 'Onaylandı' || status === 'Onaylandı') {
-                stats.totalApproved++; // Count for sales rate denominator
+                stats.totalApproved++;
                 if (approvalDate && getDayKey(approvalDate) === today) {
                     stats.todayApproved++;
                 }
@@ -199,27 +176,18 @@ export async function GET(req: NextRequest) {
                 stats.funnel.sale++;
             }
 
-            // 6. Remaining to Call (Kalan Aranacak)
+            // 6. Remaining to Call
             if (isRemaining) {
                 stats.remainingToCall++;
             }
 
-            // 7. City Stats (Detailed)
+            // 7. City Stats
             if (city) {
                 if (!stats.city[city]) {
                     stats.city[city] = {
-                        total: 0,
-                        delivered: 0,
-                        approved: 0,
-                        rejected: 0,
-                        cancelled: 0,
-                        kefil: 0,
-                        noEdevlet: 0,
-                        unreachable: 0,
-                        other: 0
+                        total: 0, delivered: 0, approved: 0, rejected: 0, cancelled: 0, kefil: 0, noEdevlet: 0, unreachable: 0, other: 0
                     };
                 }
-
                 const cStats = stats.city[city];
                 cStats.total++;
 
@@ -254,7 +222,6 @@ export async function GET(req: NextRequest) {
                 else if (status === 'Reddetti') reason = 'Müşteri Reddetti';
                 else if (status === 'Uygun değil') reason = 'Kriter Dışı';
                 else if (status === 'İptal/Vazgeçti') reason = 'İptal/Vazgeçti';
-
                 stats.rejection[reason] = (stats.rejection[reason] || 0) + 1;
             }
         });
@@ -265,9 +232,9 @@ export async function GET(req: NextRequest) {
             d.avgIncome = d.count > 0 ? Math.round(d.totalIncome / d.count) : 0;
         });
 
-        // Sort Daily Data by Date
+        // Sort Daily Data
         const sortedDaily = Object.fromEntries(
-            Object.entries(stats.daily).sort((a, b) => a[0].localeCompare(b[0])).slice(-30) // Last 30 days
+            Object.entries(stats.daily).sort((a, b) => a[0].localeCompare(b[0])).slice(-30)
         );
         stats.daily = sortedDaily;
 
