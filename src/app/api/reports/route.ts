@@ -10,6 +10,14 @@ const trFormatter = new Intl.DateTimeFormat('en-CA', {
     day: '2-digit'
 });
 
+// Helper for Sheet Strings (Naive TRT -> preserve face value)
+const utcFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
+
 // Helper to get formatted date safely
 function getDayKey(dateStr?: string) {
     if (!dateStr) return 'Unknown';
@@ -17,7 +25,8 @@ function getDayKey(dateStr?: string) {
     const ts = parseSheetDate(dateStr);
     if (!ts) return 'Invalid Date';
 
-    return trFormatter.format(new Date(ts));
+    // Treat the timestamp as UTC to preserve the face value of the string
+    return utcFormatter.format(new Date(ts));
 }
 
 export async function GET(req: NextRequest) {
@@ -102,9 +111,6 @@ export async function GET(req: NextRequest) {
             const channel = getColSafe(row, 'basvuru_kanali');
             const createdAt = getColSafe(row, 'created_at');
             const lastCalled = getColSafe(row, 'son_arama_zamani');
-            // const nextCall = getColSafe(row, 'sonraki_arama_zamani'); // unused
-            // const locked = getColSafe(row, 'kilitli_mi'); // unused
-            // const owner = getColSafe(row, 'sahip'); // unused
 
             // 1. Call Stats
             const isRemaining = status === 'Yeni' || status === 'Aranacak';
@@ -115,6 +121,13 @@ export async function GET(req: NextRequest) {
 
             if (lastCalled) {
                 // Keep tracking today's activity based on date
+                // Note: getDayKey now uses UTC formatter to preserve face value
+                // BUT 'today' uses Turkey formatter (SERVER TIME). 
+                // We need to compare Apples to Apples.
+                // If 'lastCalled' is "27.12.2024", parseSheetDate returns naive timestamp.
+                // utcFormatter returns "2024-12-27".
+                // today (Turkey) returns "2024-12-27".
+                // This matches. Correct.
                 const callDay = getDayKey(lastCalled);
                 if (callDay === today) {
                     stats.todayCalled++;
@@ -126,12 +139,15 @@ export async function GET(req: NextRequest) {
                 if (ts) {
                     const d = new Date(ts);
 
-                    // Format Date Key: YYYY-MM-DD (Turkey Time)
-                    const dateKey = trFormatter.format(d);
+                    // Format Date Key: YYYY-MM-DD (Preserve Face Value via UTC)
+                    const dateKey = utcFormatter.format(d);
 
-                    // Extract Hour: 0-23 (Turkey Time)
+                    // Extract Hour: 0-23 (Preserve Face Value via UTC)
+                    // If string was "14:00", timestamp is naive.
+                    // UTC formatter will extract "14".
+                    // This is what we want (Face Value).
                     const hourStr = new Intl.DateTimeFormat('en-US', {
-                        timeZone: 'Europe/Istanbul',
+                        timeZone: 'UTC',
                         hour: 'numeric',
                         hour12: false
                     }).format(d);
