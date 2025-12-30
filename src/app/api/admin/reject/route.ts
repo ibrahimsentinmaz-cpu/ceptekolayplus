@@ -75,6 +75,8 @@ export async function POST(req: NextRequest) {
             const msg = SMS_TEMPLATES.GUARANTOR_REQUIRED(customer.ad_soyad);
 
             if (customer.telefon) {
+                // MANUAL MODE
+                /*
                 const sent = await sendSMS(customer.telefon, msg);
                 if (sent) {
                     await logAction({
@@ -87,6 +89,8 @@ export async function POST(req: NextRequest) {
                         new_value: msg
                     });
                 }
+                */
+                console.log('Skipping Auto-SMS (Manual Mode Active):', msg);
             }
         }
 

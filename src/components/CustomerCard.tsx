@@ -5,7 +5,7 @@ import { Customer, LeadStatus, InventoryItem, LogEntry } from '@/lib/types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
-import { Loader2, AlertCircle, CheckCircle, Info, Phone, Package, Smartphone, Search, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Info, Phone, Package, Smartphone, Search, RefreshCw, MessageSquare } from 'lucide-react';
 import { cityList, getDistrictsByCityCode } from 'turkey-neighbourhoods';
 
 
@@ -95,6 +95,12 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [logsLoading, setLogsLoading] = useState(false);
 
+    // SMS Modal State
+    const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
+    const [smsMessage, setSmsMessage] = useState('');
+    const [smsLoading, setSmsLoading] = useState(false);
+
+
     const fetchLogs = async () => {
         setLogsLoading(true);
         try {
@@ -169,6 +175,38 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
 
     const handleChange = (field: keyof Customer, value: any) => {
         setData((prev) => ({ ...prev, [field]: value }));
+    };
+
+
+
+    const handleSendSMS = async () => {
+        if (!smsMessage) return;
+        setSmsLoading(true);
+        try {
+            const res = await fetch('/api/sms/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerId: data.id,
+                    phone: data.telefon,
+                    message: smsMessage
+                })
+            });
+            const json = await res.json();
+            if (res.ok && json.success) {
+                alert('SMS başarıyla gönderildi!');
+                setIsSmsModalOpen(false);
+                setSmsMessage('');
+                fetchLogs(); // Refresh logs to show the sent SMS
+            } else {
+                alert(`SMS gönderilemedi: ${json.message}`);
+            }
+        } catch (error) {
+            console.error('SMS Error:', error);
+            alert('SMS gönderilirken hata oluştu.');
+        } finally {
+            setSmsLoading(false);
+        }
     };
 
     const handleSave = async () => {
@@ -309,6 +347,14 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 className="bg-indigo-100 text-indigo-700 text-xs px-3 py-1 rounded-full hover:bg-indigo-200 transition-colors flex items-center gap-1"
                             >
                                 📋 Onaya Sun
+                            </button>
+                        )}
+                        {!isNew && (
+                            <button
+                                onClick={() => setIsSmsModalOpen(true)}
+                                className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full hover:bg-green-200 transition-colors flex items-center gap-1"
+                            >
+                                <MessageSquare className="w-3 h-3" /> SMS Gönder
                             </button>
                         )}
                     </div>
@@ -1023,6 +1069,53 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                 {stockItems.length === 0 && !stockLoading && (
                                     <p className="text-center text-gray-500 py-4">Stokta uygun cihaz bulunamadı.</p>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SMS Modal */}
+                {isSmsModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col p-6 animate-in fade-in zoom-in duration-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <MessageSquare className="w-5 h-5 text-green-600" />
+                                SMS Gönder ({data.telefon})
+                            </h3>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Mesaj İçeriği</label>
+                                <textarea
+                                    className="w-full h-32 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                                    placeholder="Mesajınızı buraya yazın..."
+                                    value={smsMessage}
+                                    onChange={(e) => setSmsMessage(e.target.value)}
+                                />
+                                <div className="text-right text-xs text-gray-500 mt-1">
+                                    {smsMessage.length} karakter - {Math.ceil(smsMessage.length / 160)} SMS
+                                </div>
+                            </div>
+
+                            {/* Template Shortcuts */}
+                            <div className="mb-4 flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setSmsMessage("Başvurunuzla ilgili size ulaşamadık. Müsait olduğunuzda dönüşünüzü bekleriz. Sevgiler.")}
+                                    className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700"
+                                >
+                                    Ulaşılamadı
+                                </button>
+                                <button
+                                    onClick={() => setSmsMessage(`Sayın ${data.ad_soyad}, eksik evraklarınız bulunmaktadır. Lütfen iletişime geçiniz.`)}
+                                    className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700"
+                                >
+                                    Eksik Evrak
+                                </button>
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                                <Button variant="ghost" onClick={() => setIsSmsModalOpen(false)}>İptal</Button>
+                                <Button onClick={handleSendSMS} isLoading={smsLoading} className="bg-green-600 hover:bg-green-700 text-white">
+                                    Gönder
+                                </Button>
                             </div>
                         </div>
                     </div>

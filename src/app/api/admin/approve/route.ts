@@ -65,6 +65,8 @@ export async function POST(req: NextRequest) {
         const msg = SMS_TEMPLATES.APPROVED(customer.ad_soyad, kredi_limiti);
 
         if (customer.telefon) {
+            // MANUAL MODE
+            /*
             const sent = await sendSMS(customer.telefon, msg);
             if (sent) {
                 await logAction({
@@ -77,6 +79,8 @@ export async function POST(req: NextRequest) {
                     new_value: msg
                 });
             }
+            */
+            console.log('Skipping Auto-SMS (Manual Mode Active):', msg);
         }
 
         return NextResponse.json({ lead: updated });

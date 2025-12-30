@@ -60,6 +60,8 @@ export async function PUT(
             }
 
             if (smsMessage && updated.telefon) {
+                // MANUAL MODE (User Request: Do not send automatically for now)
+                /* 
                 const sent = await sendSMS(updated.telefon, smsMessage);
                 if (sent) {
                     await logAction({
@@ -68,10 +70,12 @@ export async function PUT(
                         user_email: session.user.email,
                         customer_id: updated.id,
                         action: 'SEND_SMS',
-                        note: `Durum: ${status}`,
-                        new_value: smsMessage // Log the message content
+                        note: `Durum: ${status} (Otomatik)`,
+                        new_value: smsMessage
                     });
                 }
+                */
+                console.log('Skipping Auto-SMS (Manual Mode Active):', smsMessage);
             }
         }
 
