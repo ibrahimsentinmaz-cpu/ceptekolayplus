@@ -123,7 +123,7 @@ export interface LogEntry {
   timestamp: string;
   user_email: string;
   customer_id: string;
-  action: 'PULL_LEAD' | 'UPDATE_STATUS' | 'UPDATE_FIELDS' | 'UPLOAD_IMAGE_1' | 'UPLOAD_IMAGE_2' | 'SET_NEXT_CALL';
+  action: 'PULL_LEAD' | 'UPDATE_STATUS' | 'UPDATE_FIELDS' | 'UPLOAD_IMAGE_1' | 'UPLOAD_IMAGE_2' | 'SET_NEXT_CALL' | 'SEND_SMS';
   old_value?: string;
   new_value?: string;
   note?: string;
