@@ -21,7 +21,7 @@ export async function sendSMS(phone: string, message: string): Promise<{ success
         console.log(`Header: ${config.header}`);
         console.log(`Message: ${message}`);
         console.log('------------------------');
-        return { success: true, result: 'SIMULATION' };
+        return { success: true, result: 'SIMULATION_MODE_ACTIVE (Check Vercel Env Vars)' };
     }
 
     // NetGSM API Implementation
