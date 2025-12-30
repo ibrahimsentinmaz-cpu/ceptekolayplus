@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         const { success, result } = await sendSMS(phone, message);
 
         if (success) {
-            // Log it
+            // ... (Logging logic remains) ...
             if (customerId) {
                 await logAction({
                     log_id: crypto.randomUUID(),
@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
             }
             return NextResponse.json({ success: true, result });
         } else {
-            return NextResponse.json({ success: false, message: `NetGSM Hatası: ${result}` }, { status: 500 });
+            // Explicitly return the failure code from NetGSM
+            return NextResponse.json({ success: false, message: `HATA: ${result}` }, { status: 500 });
         }
     } catch (error: any) {
         console.error('Manual SMS Error:', error);

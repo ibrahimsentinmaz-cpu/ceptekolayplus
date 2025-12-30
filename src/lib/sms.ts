@@ -44,10 +44,12 @@ export async function sendSMS(phone: string, message: string): Promise<{ success
 
         if (result.startsWith('00')) {
             console.log('[NetGSM] SMS Sent Successfully');
+            // Extract Job ID if needed: result.split(' ')[1]
             return { success: true, result };
         } else {
+            // Even if not 00, return the code to UI so user can see '30', '40' etc.
             console.error(`[NetGSM] Failed to send. Error Code: ${result}`);
-            return { success: false, result };
+            return { success: false, result: `NETGSM_ERROR_CODE_${result}` };
         }
     } catch (error: any) {
         console.error('[NetGSM] HTTP Request Error:', error);
