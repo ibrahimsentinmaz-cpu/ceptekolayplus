@@ -59,6 +59,26 @@ export async function POST(req: NextRequest) {
             note: `Approved with limit: ${kredi_limiti}`
         });
 
+        // --- SMS TRIGGER ---
+        const { SMS_TEMPLATES } = await import('@/lib/sms-templates');
+        const { sendSMS } = await import('@/lib/sms');
+        const msg = SMS_TEMPLATES.APPROVED(customer.ad_soyad, kredi_limiti);
+
+        if (customer.telefon) {
+            const sent = await sendSMS(customer.telefon, msg);
+            if (sent) {
+                await logAction({
+                    log_id: crypto.randomUUID(),
+                    timestamp: new Date().toISOString(),
+                    user_email: session.user.email,
+                    customer_id: customerId,
+                    action: 'SEND_SMS',
+                    note: 'Yönetici Onayı',
+                    new_value: msg
+                });
+            }
+        }
+
         return NextResponse.json({ lead: updated });
     } catch (error: any) {
         console.error('Approve error:', error);
