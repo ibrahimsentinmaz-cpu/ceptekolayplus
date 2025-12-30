@@ -11,7 +11,7 @@ export async function sendSMS(phone: string, message: string): Promise<{ success
     const config: SMSConfig = {
         usercode: process.env.NETGSM_USERCODE,
         password: process.env.NETGSM_PASSWORD,
-        header: process.env.NETGSM_HEADER || 'CEPTEKOLAY'
+        header: process.env.NETGSM_HEADER || 'CEPTEKLYLTD'
     };
 
     // Simulation Mode if no credentials
@@ -34,7 +34,7 @@ export async function sendSMS(phone: string, message: string): Promise<{ success
         url.searchParams.append('password', config.password);
         url.searchParams.append('gsmno', phone);
         url.searchParams.append('message', message);
-        url.searchParams.append('msgheader', config.header || 'CEPTEKOLAY');
+        url.searchParams.append('msgheader', config.header || 'CEPTEKLYLTD');
         url.searchParams.append('filter', '0');
 
         const response = await fetch(url.toString(), { method: 'GET' });
