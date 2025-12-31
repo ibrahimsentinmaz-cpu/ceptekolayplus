@@ -21,5 +21,8 @@ export const SMS_TEMPLATES = {
         `Magaza Konumumuz: https://maps.app.goo.gl/VTBYugiDdTCAbnwB6 CEPTE KOLAY`,
 
     IBAN: () =>
-        `Odeme yapabileceginiz IBAN bilgimiz: TR58 0001 0008 0498 1915 2750 01 - Alici: Cepte Kolay. CEPTE KOLAY`
+        `Odeme yapabileceginiz IBAN bilgimiz: TR58 0001 0008 0498 1915 2750 01 - Alici: Cepte Kolay. CEPTE KOLAY`,
+
+    APPLICATION_RECEIVED: (name: string) =>
+        `Sayın ${name}, paylaştığınız bilgiler için teşekkür ederiz. Başvurunuz değerlendirme aşamasında olup, en kısa sürede size dönüş yapılacaktır. İlginiz için teşekkürler. CEPTE KOLAY`
 };
