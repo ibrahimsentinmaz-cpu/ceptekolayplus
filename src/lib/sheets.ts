@@ -264,7 +264,16 @@ export async function getCustomersByStatus(status: string, user: { email: string
         });
     } else {
         // Standard Status Filter
-        filtered = customers.filter(c => c.durum === status);
+        // BROADER LOGIC for 'Kefil bekleniyor' to match the robust Stats calculation
+        if (status === 'Kefil bekleniyor') {
+            filtered = customers.filter(c => {
+                const od = c.onay_durumu?.trim().toLocaleLowerCase('tr-TR') || '';
+                const d = c.durum?.trim().toLocaleLowerCase('tr-TR') || '';
+                return d === 'kefil bekleniyor' || od.includes('kefil');
+            });
+        } else {
+            filtered = customers.filter(c => c.durum === status);
+        }
     }
 
     // Role-based filtering: Sales reps only see their own customers
