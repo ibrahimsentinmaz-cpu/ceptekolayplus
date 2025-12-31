@@ -1098,6 +1098,12 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                             {/* Template Shortcuts */}
                             <div className="mb-4 flex flex-wrap gap-2">
                                 <button
+                                    onClick={() => setSmsMessage(`Sayın ${data.ad_soyad}, paylaştığınız bilgiler için teşekkür ederiz. Başvurunuz değerlendirme aşamasında olup, en kısa sürede size dönüş yapılacaktır. İlginiz için teşekkürler. CEPTE KOLAY`)}
+                                    className="text-xs bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 px-2 py-1 rounded text-cyan-700 transition"
+                                >
+                                    Başvuru Alındı
+                                </button>
+                                <button
                                     onClick={() => setSmsMessage(`Müjde! ${data.ad_soyad}, başvurunuz ${data.kredi_limiti || 'belirlenen'} TL limit ile ONAYLANMISTIR! Urununuzu teslim almak icin sizi en kisa surede magazamiza bekliyoruz. Simdiden iyi gunlerde kullanin. CEPTE KOLAY`)}
                                     className="text-xs bg-green-50 border border-green-200 hover:bg-green-100 px-2 py-1 rounded text-green-700 transition"
                                 >
