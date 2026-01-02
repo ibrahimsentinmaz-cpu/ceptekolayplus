@@ -285,127 +285,128 @@ export async function getCustomersByStatus(status: string, user: { email: string
 export async function lockNextLead(userEmail: string): Promise<(Customer & { source?: string }) | null> {
     const client = getSheetsClient();
 
-    // 1. Fetch all leads to find the best candidate
-    // OPTIMIZATION: In a real app with 10k+ rows, we'd cache or query differently.
-    // For <1000 active leads, fetching all is fine.
-    const response = await client.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `Customers!A:ZZ`,
-    });
-
-    const rows = response.data.values || [];
-    if (rows.length < 2) return null; // Only header
-
-    // Find candidates
-    // Priority 1: Scheduled Calls (Sonra Aranacak & Time passed)
-    // Priority 2: New Leads (Yeni)
-    // Priority 3: Retry (Ulaşılamadı/Meşgul & >2 hours since last call)
-
-    const nowTime = new Date().getTime();
-    const TWO_HOURS = 2 * 60 * 60 * 1000;
-
-    const candidates = rows
-        .map((row, index) => ({ customer: rowToCustomer(row), rowIndex: index + 1 }))
-        .filter(item => {
-            if (item.rowIndex <= 1) return false; // Skip header
-            const c = item.customer;
-
-            // Skip locked or owned leads
-            if (c.kilitli_mi === true || (c.kilitli_mi as any) === 'TRUE' || c.sahip) return false;
-
-            // 1. Scheduled
-            if (c.durum === 'Daha sonra aranmak istiyor' && c.sonraki_arama_zamani) {
-                const scheduleTime = parseSheetDate(c.sonraki_arama_zamani);
-                if (scheduleTime && scheduleTime <= nowTime) return true;
-            }
-
-            // 2. New
-            if (c.durum === 'Yeni') return true;
-
-            // 3. Retry (Phase 72: Re-enabled)
-            if (c.durum === 'Ulaşılamadı' || c.durum === 'Meşgul/Hattı kapalı' || c.durum === 'Cevap Yok') {
-                if (!c.son_arama_zamani) return true;
-                const lastCall = new Date(c.son_arama_zamani).getTime();
-                return (nowTime - lastCall) > TWO_HOURS;
-            }
-
-            return false;
-        })
-        .sort((a, b) => {
-            // Sort by Priority logic
-            const getScore = (c: Customer) => {
-                if (c.durum === 'Daha sonra aranmak istiyor') return 1; // Highest
-                if (c.durum === 'Yeni') return 2;
-                return 3;
-            };
-
-            const scoreA = getScore(a.customer);
-            const scoreB = getScore(b.customer);
-
-            if (scoreA !== scoreB) return scoreA - scoreB;
-
-            // If same priority, FIFO (rowIndex or created_at)
-            return a.rowIndex - b.rowIndex;
+    // OPTIMISTIC LOCKING with Retry
+    // We try up to 3 times to lock a lead.
+    for (let attempt = 0; attempt < 3; attempt++) {
+        // 1. Fetch Candidates (Refetched on each attempt to get fresh status)
+        const response = await client.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: `Customers!A:ZZ`,
         });
 
-    if (candidates.length === 0) return null;
+        const rows = response.data.values || [];
+        if (rows.length < 2) return null;
 
-    const target = candidates[0];
-    const rowIndex = target.rowIndex;
+        const candidates = rows
+            .map((row, index) => ({ customer: rowToCustomer(row), rowIndex: index + 1 }))
+            .filter(item => {
+                if (item.rowIndex <= 1) return false;
+                const c = item.customer;
+                // Skip locked or owned
+                if (c.kilitli_mi === true || (c.kilitli_mi as any) === 'TRUE' || c.sahip) return false;
 
-    // 2. Lock and Assign
-    const now = new Date().toISOString();
+                // Priority Logic
+                const nowTime = new Date().getTime();
+                const TWO_HOURS = 2 * 60 * 60 * 1000;
 
-    const updates = [
-        { col: 'durum', val: 'Aranacak' },
-        { col: 'sahip', val: userEmail },
-        { col: 'cekilme_zamani', val: now },
-        { col: 'kilitli_mi', val: 'TRUE' },
-        { col: 'kilit_sahibi', val: userEmail },
-        { col: 'kilit_zamani', val: now },
-        { col: 'updated_at', val: now },
-        { col: 'updated_by', val: userEmail }
-    ];
+                if (c.durum === 'Daha sonra aranmak istiyor' && c.sonraki_arama_zamani) {
+                    const t = parseSheetDate(c.sonraki_arama_zamani);
+                    if (t && t <= nowTime) return true;
+                }
+                if (c.durum === 'Yeni') return true;
+                if (c.durum === 'Ulaşılamadı' || c.durum === 'Meşgul/Hattı kapalı' || c.durum === 'Cevap Yok') {
+                    if (!c.son_arama_zamani) return true;
+                    return (nowTime - new Date(c.son_arama_zamani).getTime()) > TWO_HOURS;
+                }
+                return false;
+            })
+            .sort((a, b) => {
+                const getScore = (c: Customer) => {
+                    if (c.durum === 'Daha sonra aranmak istiyor') return 1;
+                    if (c.durum === 'Yeni') return 2;
+                    return 3;
+                };
+                const sA = getScore(a.customer);
+                const sB = getScore(b.customer);
+                if (sA !== sB) return sA - sB;
+                return a.rowIndex - b.rowIndex;
+            });
 
-    const newCustomerData = { ...target.customer, ...Object.fromEntries(updates.map(u => [u.col, u.val])) };
+        if (candidates.length === 0) return null;
 
-    // Determine Source for User Feedback
-    let source = 'Genel';
-    if (target.customer.durum === 'Daha sonra aranmak istiyor') source = '📅 Randevu';
-    else if (target.customer.durum === 'Yeni') source = '🆕 Yeni Kayıt';
-    else source = '♻️ Tekrar Arama';
+        const target = candidates[0];
+        const rowIndex = target.rowIndex;
 
-    // Explicitly set types for Customer properties that might be undefined
-    // And include source info
-    const finalCustomer: Customer & { source: string } = {
-        ...newCustomerData,
-        durum: 'Aranacak', // Ensure strict literal type
-        source: source // Return source info
-    };
+        // 2. Attempt to Lock
+        const now = new Date().toISOString();
+        const updates = [
+            { col: 'durum', val: 'Aranacak' },
+            { col: 'sahip', val: userEmail },
+            { col: 'cekilme_zamani', val: now },
+            { col: 'kilitli_mi', val: 'TRUE' },
+            { col: 'kilit_sahibi', val: userEmail },
+            { col: 'kilit_zamani', val: now },
+            { col: 'updated_at', val: now },
+            { col: 'updated_by', val: userEmail }
+        ];
 
-    const newRow = customerToRow(finalCustomer);
+        const newCustomerData = { ...target.customer, ...Object.fromEntries(updates.map(u => [u.col, u.val])) };
+        const newRow = customerToRow(newCustomerData);
 
-    await client.spreadsheets.values.update({
-        spreadsheetId: SHEET_ID,
-        range: `Customers!A${rowIndex}:${LAST_COL}${rowIndex}`,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-            values: [newRow]
+        await client.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `Customers!A${rowIndex}:${LAST_COL}${rowIndex}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [newRow] }
+        });
+
+        // 3. VERIFICATION (Race Condition Check)
+        // Wait a small random amount to allow collision resolution (last write wins)
+        const delay = Math.floor(Math.random() * 500) + 200; // 200-700ms
+        await new Promise(r => setTimeout(r, delay));
+
+        // Read specific row back
+        const verifyRes = await client.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: `Customers!A${rowIndex}:${LAST_COL}${rowIndex}`,
+        });
+        const verifyRow = verifyRes.data.values?.[0];
+
+        if (verifyRow) {
+            const currentOwner = verifyRow[COL_SAHIP];
+            // If I am the owner, success!
+            if (currentOwner === userEmail) {
+                // Determine Source for User Feedback
+                let source = 'Genel';
+                if (target.customer.durum === 'Daha sonra aranmak istiyor') source = '📅 Randevu';
+                else if (target.customer.durum === 'Yeni') source = '🆕 Yeni Kayıt';
+                else source = '♻️ Tekrar Arama';
+
+                const finalCustomer: Customer & { source: string } = {
+                    ...newCustomerData,
+                    durum: 'Aranacak',
+                    source: source
+                };
+
+                await logAction({
+                    log_id: crypto.randomUUID(),
+                    timestamp: now,
+                    user_email: userEmail,
+                    customer_id: target.customer.id,
+                    action: 'PULL_LEAD',
+                    old_value: target.customer.durum,
+                    new_value: 'Aranacak'
+                });
+
+                return finalCustomer;
+            } else {
+                console.warn(`Race condition lost. Target ${rowIndex} owned by ${currentOwner}, expected ${userEmail}. Retrying...`);
+                // Loop continues to next attempt
+            }
         }
-    });
+    }
 
-    // Log it
-    await logAction({
-        log_id: crypto.randomUUID(),
-        timestamp: now,
-        user_email: userEmail,
-        customer_id: target.customer.id,
-        action: 'PULL_LEAD',
-        old_value: target.customer.durum,
-        new_value: 'Aranacak'
-    });
-
-    return finalCustomer;
+    return null; // Failed after retries
 }
 
 // import { formatInTimeZone } from 'date-fns-tz';
