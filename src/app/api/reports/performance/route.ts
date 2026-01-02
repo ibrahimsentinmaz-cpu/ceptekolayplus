@@ -24,11 +24,10 @@ export async function GET(request: Request) {
         const userStats: Record<string, {
             email: string; // The key
             totalLeads: number; // Portfolio size
-            salesCount: number; // 'Teslim edildi' or 'Satış yapıldı/Tamamlandı' or 'Onaylandı'? Usually 'Teslim edildi' is final.
-            // Let's count 'Onaylandı' as approved sales, 'Teslim edildi' as completed.
-            callsCount: number; // Based on logs? Or status updates? 
-            // 'PULL_LEAD' = 1 call intent. 
-            // 'UPDATE_STATUS' (manual) could be a result of a call.
+            salesCount: number; // DEPRECATED: removed from usage, replaced by below
+            approvedCount: number; // 'Onaylandı'
+            deliveredCount: number; // 'Teslim edildi' or 'Satış yapıldı/Tamamlandı'
+            callsCount: number;
             smsCount: number;
         }> = {};
 
@@ -38,13 +37,17 @@ export async function GET(request: Request) {
             if (!owner) return;
 
             if (!userStats[owner]) {
-                userStats[owner] = { email: owner, totalLeads: 0, salesCount: 0, callsCount: 0, smsCount: 0 };
+                userStats[owner] = { email: owner, totalLeads: 0, salesCount: 0, approvedCount: 0, deliveredCount: 0, callsCount: 0, smsCount: 0 };
             }
 
             userStats[owner].totalLeads++;
 
-            if (lead.durum === 'Satış yapıldı/Tamamlandı' || lead.durum === 'Teslim edildi' || lead.durum === 'Onaylandı') {
-                userStats[owner].salesCount++;
+            // Split metrics
+            if (lead.durum === 'Onaylandı') {
+                userStats[owner].approvedCount++;
+            }
+            if (lead.durum === 'Teslim edildi' || lead.durum === 'Satış yapıldı/Tamamlandı') {
+                userStats[owner].deliveredCount++;
             }
         });
 
@@ -58,7 +61,7 @@ export async function GET(request: Request) {
             if (!user) return;
             // Initialize if not present (e.g. user has no current leads but has history)
             if (!userStats[user]) {
-                userStats[user] = { email: user, totalLeads: 0, salesCount: 0, callsCount: 0, smsCount: 0 };
+                userStats[user] = { email: user, totalLeads: 0, salesCount: 0, approvedCount: 0, deliveredCount: 0, callsCount: 0, smsCount: 0 };
             }
 
             if (log.action === 'SEND_SMS') {
@@ -91,7 +94,7 @@ export async function GET(request: Request) {
             ...s,
             // Calculate a simple score/efficiency? 
             // conversionRate: s.callsCount > 0 ? (s.salesCount / s.callsCount) * 100 : 0
-        })).sort((a, b) => b.salesCount - a.salesCount); // Rank by sales
+        })).sort((a, b) => b.deliveredCount - a.deliveredCount); // Rank by REAL sales (Delivered)
 
         return NextResponse.json({
             stats: statsArray,
