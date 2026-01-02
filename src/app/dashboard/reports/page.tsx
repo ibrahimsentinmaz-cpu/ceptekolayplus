@@ -7,7 +7,7 @@ import {
     PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, LabelList
 } from 'recharts';
 import {
-    Loader2, ArrowLeft, Users, Phone,
+    Loader2, ArrowLeft, Users, Phone, Printer,
     Package, CheckCircle, Share2, ClipboardList, TrendingUp, Clock, Activity, Download
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
