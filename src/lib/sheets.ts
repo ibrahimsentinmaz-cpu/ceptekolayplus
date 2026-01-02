@@ -410,7 +410,7 @@ export async function lockNextLead(userEmail: string): Promise<(Customer & { sou
 
 // import { formatInTimeZone } from 'date-fns-tz';
 
-export async function getLeadStats() {
+export async function getLeadStats(user?: { email: string; role: string }) {
     const client = getSheetsClient();
     // Fetch A2:ZZ but impose a SAFETY LIMIT for Vercel
     // Even A2:ZZ dynamic might be too huge if there are 5000+ rows
@@ -455,6 +455,10 @@ export async function getLeadStats() {
     const statusCounts: Record<string, number> = {};
     const hourly: Record<number, number> = {}; // 0-23
 
+    // Determine if we should filter for this user
+    const isSales_REP = user?.role === 'SALES_REP';
+    const filterEmail = user?.email;
+
     // Loop through RAW rows for max speed
     for (const row of rows) {
         // Direct access
@@ -465,6 +469,46 @@ export async function getLeadStats() {
         const kilitli_mi = row[COL_KILITLI];
         const sahip = row[COL_SAHIP];
 
+        // 1. GLOBAL Availability Calculation (Same for everyone)
+        // Skip locked/owned for availability check
+        const isLockedOrOwned = (kilitli_mi === 'TRUE' || kilitli_mi === true || (sahip && sahip.length > 0));
+
+        let isAvailable = false;
+        if (!isLockedOrOwned) {
+            if (durum === 'Daha sonra aranmak istiyor') {
+                if (sonraki_arama) {
+                    const scheduleTime = parseSheetDate(sonraki_arama);
+                    if (scheduleTime && scheduleTime <= nowTime) {
+                        isAvailable = true;
+                    }
+                }
+            } else if (durum === 'Yeni') {
+                isAvailable = true;
+            } else if (durum === 'Ulaşılamadı' || durum === 'Meşgul/Hattı kapalı' || durum === 'Cevap Yok') {
+                // Retry logic
+                if (!son_arama) {
+                    // isAvailable = true; 
+                } else {
+                    const lastCall = new Date(son_arama).getTime();
+                    if (nowTime - lastCall > TWO_HOURS) {
+                        isAvailable = true;
+                    }
+                }
+            }
+        }
+        if (isAvailable) available++;
+
+
+        // 2. OWNERSHIP Filter for Detailed Stats
+        let isMine = true;
+        if (isSales_REP && filterEmail) {
+            isMine = (sahip === filterEmail);
+        }
+
+        if (!isMine) continue; // SKIP detailed stats for others
+
+        // --- DETAILED STATS (Only for owned or Admin) ---
+
         // Status Counts
         if (durum) {
             statusCounts[durum] = (statusCounts[durum] || 0) + 1;
@@ -473,7 +517,6 @@ export async function getLeadStats() {
         // Today Called & Hourly Stats
         if (son_arama) {
             let lastCallDate = '';
-            // Fast date parsing using our helper for reliability
             const ts = parseSheetDate(son_arama);
 
             if (ts) {
@@ -481,19 +524,6 @@ export async function getLeadStats() {
                 lastCallDate = trFormatter.format(d);
 
                 // Hourly Stat
-                // We use getUTCHours() + 3 for Turkey time explicitly to allow for global node envs
-                // Or rely on Date object if configured. Let's fix timezone to Turkey explicitly.
-                const trDate = new Date(ts + (3 * 60 * 60 * 1000)); // Shift +3 hours manually for analysis if env is UTC
-                const hour = trDate.getUTCHours();
-
-                // Correction: Actually, if 'ts' is from new Date(ISOString), it's a correct timestamp.
-                // new Date(ts).getHours() will use SYSTEM timezone.
-                // On Vercel, system timezone is likely UTC. 
-                // We want Turkey hours (UTC+3).
-                // So if it's 12:00 UTC, it is 15:00 TRT. 
-                // `trFormatter` above uses Europe/Istanbul. 
-
-                // Better approach: use formatting to get hour
                 const hourStr = new Intl.DateTimeFormat('en-US', {
                     timeZone: 'Europe/Istanbul',
                     hour: 'numeric',
@@ -511,12 +541,7 @@ export async function getLeadStats() {
             }
         }
 
-        console.log("DEBUG: Generated Hourly Stats:", JSON.stringify(hourly)); // <--- DEBUG LOG
-
-        // ... rest of function
-
-        // Pending Apporval logic (Simplified for consistency)
-        // If status is 'Başvuru alındı', it shows in Admin Panel as Pending, regardless of previous 'onay_durumu'.
+        // Pending Apporval logic 
         const isPending = durum === 'Başvuru alındı';
         if (isPending) pending_approval++;
 
@@ -526,63 +551,26 @@ export async function getLeadStats() {
         if (durum === 'Teslim edildi') delivered++;
         if (durum === 'Onaylandı') approved++;
 
-        // Availability Logic
-        // Skip locked/owned
-        if (kilitli_mi === 'TRUE' || kilitli_mi === true || (sahip && sahip.length > 0)) continue;
-
-        let isAvailable = false;
-
-        // 1. Scheduled
+        // Detailed Counters matching original logic (but filtered by mine)
         if (durum === 'Daha sonra aranmak istiyor') {
             if (sonraki_arama) {
                 const scheduleTime = parseSheetDate(sonraki_arama);
                 if (scheduleTime && scheduleTime <= nowTime) {
                     waiting_scheduled++;
-                    isAvailable = true;
                 }
             }
-        }
-        // 2. New
-        else if (durum === 'Yeni') {
+        } else if (durum === 'Yeni') {
             waiting_new++;
-            isAvailable = true;
-        }
-        // 3. Retry - REMOVED from availability count (Phase 64)
-        else if (durum === 'Ulaşılamadı' || durum === 'Meşgul/Hattı kapalı' || durum === 'Cevap Yok') {
-            // We still count them for the DASHBOARD STATS (waiting_retry), 
-            // but we do NOT set isAvailable = true.
-            // Because "Available" means "Available for Auto-Pull".
+        } else if (durum === 'Ulaşılamadı' || durum === 'Meşgul/Hattı kapalı' || durum === 'Cevap Yok') {
             if (!son_arama) {
                 waiting_retry++;
-                // isAvailable = true; // REMOVED
             } else {
                 const lastCall = new Date(son_arama).getTime();
                 if (nowTime - lastCall > TWO_HOURS) {
                     waiting_retry++;
-                    isAvailable = true; // RE-ENABLED (Phase 72)
-                } else {
-                    // Even if not cooled down, we track them as waiting retry generally?
-                    // Actually original logic only counted them if cooled down.
-                    // Let's keep counting them as "waiting_retry" if satisfied, 
-                    // but NOT add to 'available'.
                 }
             }
-            // Actually, to be consistent with "waiting_retry" usually meaning "Ready to call",
-            // let's keep the logic for `waiting_retry` increment, but remove `isAvailable = true`.
-
-            // Wait, looking at original code:
-            /*
-             if (!son_arama) {
-                waiting_retry++;
-                isAvailable = true;
-            } ...
-            */
-            // So `waiting_retry` was effectively "Ready Retry".
-            // We should probably still count them if they are ready, so the admin sees them,
-            // but just don't make them `isAvailable`.
         }
-
-        if (isAvailable) available++;
     }
 
     total_scheduled = statusCounts['Daha sonra aranmak istiyor'] || 0;

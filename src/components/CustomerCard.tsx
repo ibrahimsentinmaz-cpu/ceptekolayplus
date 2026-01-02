@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Customer, LeadStatus, InventoryItem, LogEntry } from '@/lib/types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -54,6 +55,7 @@ const CANCELLATION_REASONS = [
 ];
 
 export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCardProps) {
+    const { data: session } = useSession();
     const [data, setData] = useState<Customer>(initialData);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -341,7 +343,7 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                 <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         {isNew ? 'Yeni Müşteri Kaydı' : 'Müşteri Kartı'}
-                        {!isNew && (
+                        {!isNew && session?.user?.role === 'ADMIN' && (
                             <button
                                 onClick={() => setIsApprovalModalOpen(true)}
                                 className="bg-indigo-100 text-indigo-700 text-xs px-3 py-1 rounded-full hover:bg-indigo-200 transition-colors flex items-center gap-1"

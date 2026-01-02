@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const stats = await getLeadStats();
+        const stats = await getLeadStats(session.user as any);
         return NextResponse.json(stats);
     } catch (error: any) {
         console.error('Stats fetch error:', error);
