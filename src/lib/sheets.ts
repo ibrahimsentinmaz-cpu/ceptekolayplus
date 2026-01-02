@@ -484,6 +484,7 @@ export async function getLeadStats(user?: { email: string; role: string }) {
                 }
             } else if (durum === 'Yeni') {
                 isAvailable = true;
+                waiting_new++;
             } else if (durum === 'Ulaşılamadı' || durum === 'Meşgul/Hattı kapalı' || durum === 'Cevap Yok') {
                 // Retry logic
                 if (!son_arama) {
@@ -559,8 +560,6 @@ export async function getLeadStats(user?: { email: string; role: string }) {
                     waiting_scheduled++;
                 }
             }
-        } else if (durum === 'Yeni') {
-            waiting_new++;
         } else if (durum === 'Ulaşılamadı' || durum === 'Meşgul/Hattı kapalı' || durum === 'Cevap Yok') {
             if (!son_arama) {
                 waiting_retry++;

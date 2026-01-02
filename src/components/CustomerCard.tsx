@@ -360,7 +360,14 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                             </button>
                         )}
                     </div>
-                    {!isNew && <span className="text-sm font-normal text-gray-500">ID: {data.id.slice(0, 8)}...</span>}
+                    <div className="flex items-center gap-3">
+                        {data.basvuru_kanali && (
+                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                                {data.basvuru_kanali}
+                            </span>
+                        )}
+                        {!isNew && <span className="text-sm font-normal text-gray-500">ID: {data.id.slice(0, 8)}...</span>}
+                    </div>
                 </h2>
 
                 {/* Tabs */}
