@@ -132,9 +132,16 @@ export async function GET(req: NextRequest) {
                 const callDay = getDayKey(lastCalled);
                 if (callDay === today) {
                     stats.todayCalled++;
-                    // Track who made the call (or rather, who owns it now - simple proxy)
-                    const owner = getColSafe(row, 'sahip') || 'Bilinmiyor';
-                    stats.todayCalledByPerson[owner] = (stats.todayCalledByPerson[owner] || 0) + 1;
+                    // Track who made the call.
+                    // 1. Try 'sahip' (Current Owner)
+                    // 2. If empty (e.g. released lead like 'Yanlış Numara'), use 'updated_by' (Last Actor)
+                    let owner = getColSafe(row, 'sahip');
+                    if (!owner) {
+                        owner = getColSafe(row, 'updated_by');
+                    }
+
+                    const ownerLabel = owner || 'Bilinmiyor';
+                    stats.todayCalledByPerson[ownerLabel] = (stats.todayCalledByPerson[ownerLabel] || 0) + 1;
                 }
 
                 // Hourly Stats grouped by Date
