@@ -1167,19 +1167,19 @@ export function CustomerCard({ initialData, onSave, isNew = false }: CustomerCar
                                     Onaylandı
                                 </button>
                                 <button
-                                    onClick={() => setSmsMessage(`Değerli Müşterimiz ${data.ad_soyad}, başvurunuzun olumlu sonuçlanabilmesi için kefil desteğine ihtiyaç duyulmuştur. Detaylı bilgi için 0551 346 6735 numaralı hattımızdan bize ulaşabilir veya mağazamızı ziyaret edebilirsiniz. CEPTE KOLAY`)}
+                                    onClick={() => setSmsMessage(`Değerli Müşterimiz ${data.ad_soyad}, başvurunuzun olumlu sonuçlanabilmesi için kefil desteğine ihtiyaç duyulmuştur. Detaylı bilgi için 0551 349 6735 numaralı hattımızdan bize ulaşabilir veya mağazamızı ziyaret edebilirsiniz. CEPTE KOLAY`)}
                                     className="text-xs bg-orange-50 border border-orange-200 hover:bg-orange-100 px-2 py-1 rounded text-orange-700 transition"
                                 >
                                     Kefil İstendi
                                 </button>
                                 <button
-                                    onClick={() => setSmsMessage(`Sayın ${data.ad_soyad}, başvurunuzla ilgili size ulaşmaya çalıştık ancak ulaşamadık. Müsait olduğunuzda 0551 346 6735 numaramızdan veya WhatsApp hattımızdan bize dönüş yapmanızı rica ederiz. CEPTE KOLAY`)}
+                                    onClick={() => setSmsMessage(`Sayın ${data.ad_soyad}, başvurunuzla ilgili size ulaşmaya çalıştık ancak ulaşamadık. Müsait olduğunuzda 0551 349 6735 numaramızdan veya WhatsApp hattımızdan bize dönüş yapmanızı rica ederiz. CEPTE KOLAY`)}
                                     className="text-xs bg-gray-50 border border-gray-200 hover:bg-gray-100 px-2 py-1 rounded text-gray-700 transition"
                                 >
                                     Ulaşılamadı
                                 </button>
                                 <button
-                                    onClick={() => setSmsMessage(`Sayın ${data.ad_soyad}, başvurunuzu tamamlayabilmemiz için bazı eksik evraklarınız bulunmaktadır. 0551 346 6735 WhatsApp hattımızdan bilgi alarak işlemlerinizi hızlandırabilirsiniz. CEPTE KOLAY`)}
+                                    onClick={() => setSmsMessage(`Sayın ${data.ad_soyad}, başvurunuzu tamamlayabilmemiz için bazı eksik evraklarınız bulunmaktadır. 0551 349 6735 WhatsApp hattımızdan bilgi alarak işlemlerinizi hızlandırabilirsiniz. CEPTE KOLAY`)}
                                     className="text-xs bg-blue-50 border border-blue-200 hover:bg-blue-100 px-2 py-1 rounded text-blue-700 transition"
                                 >
                                     Eksik Evrak
